@@ -1,0 +1,486 @@
+---
+title: "HW7"
+author: "Colin Pi"
+date: '2019 2 18 '
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, out.width = "60%")
+library(resampledata)
+```
+
+### Problem 14
+
+```{r}
+no.smoker <- subset(Girls2004, select = Weight, subset = Smoker == "No", drop = T)
+yes.smoker <- subset(Girls2004, select = Weight, subset = Smoker == "Yes", drop = T)
+```
+
+**(a)**
+
+```{r, fig.align='center'}
+par(mfrow=c(1,2))
+hist(no.smoker, main = "Non-smokers", xlab = "Weight (grams)")
+hist(yes.smoker, main = "Smokers", xlab = "Weight (grams)")
+par(mfrow=c(1,1))
+```
+
+Distribution of the weights of babies born to Non-smokers is slightly skewed to right, whereas that of babies born to Smokers is skewed to left. The number of observation of Non-smokers (69) is much bigger than that of Smokers (11). The mean weights of babies born to Non-smokers is `r round(mean(no.smoker), digits =3)` grams with standard error of `r round(sd(no.smoker), digits = 3)` grams. Mean and standard error of weights of babies born to Smokers are slightly smaller than those of Non-smokers, with mean of `r round(mean(yes.smoker), digits = 3)` grams and standard error of `r round(sd(yes.smoker), digits = 3)` grams.
+
+**(b)**
+
+```{r}
+ci.14 <- t.test(Weight ~ Smoker, data = Girls2004, alt = "greater")$conf
+```
+
+The lower t confidence bound for the mean difference in weights between babies born to nonsmokers and smokers is (`r round(ci.14[1], digits = 3)`, $\infty$). We are 95% confident that in average the weights of babies born to Non-smokers is at least `r round(ci.14[1], digits = 3)`grams larger than those of babies born to Smokers.
+
+\newpage
+
+### Problem 15
+
+```{r}
+no.fer <- subset(Spruce, select = Ht.change, subset = Fertilizer == "NF", drop = T)
+yes.fer <- subset(Spruce, select = Ht.change, subset = Fertilizer == "F", drop = T)
+```
+
+**(a)**
+
+```{r, fig.align='center'}
+par(mfrow=c(1,2))
+hist(no.fer, main = "No Fertilizer", xlab = "Height Change (cm)")
+hist(yes.fer, main = "Fertilizer", xlab = "Height Change (cm)")
+par(mfrow=c(1,1))
+```
+
+Both distributions of the height changes of trees with and without fertilizer is slightly skewed to right. The mean height changes of trees without fertilizer is `r round(mean(no.fer), digits = 3)`cm with standard error of `r round(sd(no.fer), digits = 3)`cm. Mean height changes of trees with fertilizer is bigger than that of trees without fertilizer (`r round(mean(yes.fer), digits = 3)`cm), but the standard error is smaller than that of trees without fertilizer (`r round(sd(yes.fer), digits = 3)`cm).
+
+**(b)**
+
+```{r}
+ci.15 <- t.test(Ht.change ~ Fertilizer, data = Spruce, alt = "greater")$conf
+```
+
+The lower t confidence bound for the mean difference in changes in heights of trees during the 5-year-period between trees with fertilizer and without fertilizer is (`r round(ci.15[1], digits = 3)`, $\infty$). We are 95% confident that in average the trees with fertilizer grew at least `r round(ci.15[1], digits = 3)`cm taller than the trees without fertilizer during the 5-year-period. 
+
+### Problem 19
+
+```{r}
+diff.19 <- unlist(Groceries$Target-Groceries$Walmart)
+ci.19.1 <- t.test(diff.19)$conf
+ci.19.2 <- t.test(diff.19[-2])$conf
+```
+
+The 95% confidence interval is (`r round(ci.19.1[1], digits = 3)`, `r round(ci.19.1[2], digits = 3)`), suggesting that we cannot conclude that there is a difference in average price between Target and Walmart. Without the outlier, however, the 95% confidence interval is (`r round(ci.19.2[1], digits = 3)`, `r round(ci.19.2[2], digits = 3)`), implying that we can claim that there is a difference in average price between Target and Walmart. The lower bound of the interval increased, but the upper bound does not significantly changed by omitting the outlier. 
+\newpage
+
+### Problem 23 (Number is not correct)
+
+$0.75 = P(T < q_{t_{0.75,499}}) = P(\dfrac{\bar{X}-\mu}{S/\sqrt{n}} < q_{t_{0.75,499}})$
+\
+$= P(\bar{X}-\mu < q_{t_{0.75,499}} \cdot S/\sqrt{n}) = P(\bar{X}-q_{t_{0.75,499}} \cdot S/\sqrt{n}<\mu)$
+\
+So 75% one-sided upper t confidence interval for the true mean tax error is ($5.29 - 3.52/\sqrt{500} \ \cdot$ `r round(qt(0.75, df = 499), digits = 3)`, $\infty$) = (`r round(5.29 -3.52/sqrt(500)*qt(0.75, df = 499), digits=3)`, $\infty$). 
+
+### Problem 24
+
+**(a)**
+
+```{r}
+ci.24.a <- prop.test(459, 980, correct = FALSE)$conf
+```
+
+95% CI : (`r round(ci.24.a[1], digits = 3)`, `r round(ci.24.a[2], digits = 3)`)
+
+**(b)**
+
+```{r}
+ci.24.b <- prop.test(426, 759, correct = FALSE)$conf
+```
+
+95% CI : (`r round(ci.24.b[1], digits = 3)`, `r round(ci.24.b[2], digits = 3)`)
+
+**(c)**
+
+```{r}
+ci.24.c <- prop.test(c(459,426), c(980,759))$conf
+```
+
+95% CI : (`r round(ci.24.c[1], digits = 3)`, `r round(ci.24.c[2], digits = 3)`). We are 95% confident that the proportion of men who voted for Bush is from `r round(-ci.24.c[1], digits = 3)` to `r round(-ci.24.c[2], digits = 3)` higher than that of women who voted for Bush in 2000 Election. 
+
+### Problem 25
+
+Margin of Error = $q_{1-\alpha/2} \ \cdot \sqrt{\dfrac{\tilde{P}(1-\tilde{P})}{n}}$ where $\tilde{P} = \dfrac{X+2}{n+4}$.
+
+**(a)**
+
+Without an estimate for p, we have to use $\tilde{P}$ = 0.5 because it maximizes $\tilde{P}(1-\tilde{P})$ so that we can make a conservative estimate of n. 
+\
+`r round(qnorm(0.975), digits = 3)` $\cdot \ \sqrt{\dfrac{0.5(1-0.5)}{n+4}} \leq 0.03$
+\
+$(\dfrac{1.96\cdot0.5}{0.03})^2 \leq n+4$
+$\therefore \ n \geq$  `r ceiling((1.96*0.5/0.03)^2)-4`
+
+**(b)**
+
+Now we have an estimate for p of 0.65. So we can use  $\tilde{P}$ = 0.65. 
+\
+`r round(qnorm(0.975), digits = 3)` $\cdot \ \sqrt{\dfrac{0.65(1-0.65)}{n+4}} \leq 0.03$
+\
+$(\dfrac{1.96}{0.03})^2\ \cdot 0.65 \ \cdot 0.35\leq n+4$
+$\therefore \ n \geq$  `r ceiling((1.96/0.03)^2*0.65*0.35)-4`
+
+\newpage
+
+### Problem 30
+
+**(a)**
+
+```{r, fig.align='center'}
+alkalinity <- subset(MnGroundwater, select = Alkalinity, drop = T)
+par(mfrow=c(1,2))
+hist(alkalinity, main = "Distribution of Alkalinity", xlab = "Level")
+qqnorm(alkalinity)
+qqline(alkalinity)
+par(mfrow=c(1,1))
+```
+
+The distribution is slightly skewed to the right and has fatter tails than standard normal curve. QQ-plot also suggests that several observations beyond -2 or 1 are deviated from the theoretical quantiles. 
+
+**(b)**
+
+```{r}
+ci.30 <- t.test(alkalinity)$conf
+```
+
+95% CI : (283575.6, 297789.8)
+
+**(c)**
+
+```{r}
+xbar.30 <- mean(alkalinity)
+n.30 <- length(alkalinity)
+SE.30 <- sd(alkalinity)/sqrt(n.30)
+
+N <- 10^4
+Tstar.30 <- numeric(N)
+boot.30.mean <- numeric(N)
+
+for (i in 1:N){
+  alkalinityBoot <- sample(alkalinity, n.30, replace = TRUE)
+  SEstar <- sd(alkalinityBoot)/sqrt(n.30)
+  Tstar.30[i] <- (mean(alkalinityBoot)-xbar.30)/SEstar
+  boot.30.mean[i] <- mean(alkalinityBoot)
+}
+
+boot.CI.30 <- quantile(boot.30.mean, c(0.025, 0.975))
+
+boot.t.CI.30 <- xbar.30 - quantile(Tstar.30, c(0.975, 0.025))*SE.30
+```
+
+95% bootstrap percentile interval : (283431.2, 297806.7)
+\
+95% bootstrap t confidence interval : (283587.9, 297768.9)
+\
+Compared to the bootstrap percentile interval, the bootstrap t confidence interval has a narrower interval. Especially, the lower bound of the bootstrap t confidence interval is higher than that of the bootstrap percentile interval. Since the sample is skewed, I will put more credibility to bootstrap t confidence interval than bootstrap percentile interval. So, I will report bootstrap t confidence interval. 
+
+### Problem 31
+
+**(a)**
+
+```{r}
+nonsmoker <- subset(TXBirths2004, select = Weight, subset = Smoker == "No", drop=T)
+smoker <- subset(TXBirths2004, select = Weight, subset = Smoker == "Yes", drop=T)
+```
+
+Number of nonsmokers: `r length(nonsmoker)`
+\
+Number of smokers: `r length(smoker)`
+
+**(b)**
+
+```{r, fig.align='center'}
+par(mfrow=c(1,2))
+hist(nonsmoker, main = "Nonsmoker", xlab = "Weight (grams)")
+hist(smoker, main = "Smoker", xlab = "Weight (grams)")
+par(mfrow=c(1,1))
+```
+
+The distribution of Smoker group is almost symmetric (slightly skewed to the right), but that of Nonsmoker group is skewed to the left (with a larger degree). 
+
+**(c)**
+
+```{r}
+mean.diff.31 <- mean(nonsmoker)-mean(smoker)
+se.31 <- sqrt(var(nonsmoker)/length(nonsmoker)+var(smoker)/length(smoker))
+
+Tstar.31 <- numeric(N)
+boot.diff.31 <- numeric(N)
+
+for (i in 1:N){
+  nonsmokerBoot <- sample(nonsmoker, length(nonsmoker), replace=TRUE)
+  smokerBoot <- sample(smoker, length(smoker), replace = TRUE)
+  SEstar <- sqrt(var(nonsmokerBoot)/length(nonsmoker)+var(smokerBoot)/length(smoker))
+  meanDiffBoot <- mean(nonsmokerBoot)-mean(smokerBoot)
+  Tstar.31[i] <- (meanDiffBoot-mean.diff.31)/SEstar
+  boot.diff.31[i] <- meanDiffBoot
+}
+
+t.CI.31 <- t.test(Weight ~ Smoker, data = TXBirths2004)$conf
+boot.CI.31 <- quantile(boot.diff.31, c(0.025,0.975))
+boot.t.CI.31 <- mean.diff.31-quantile(Tstar.31, c(0.975,0.025))*se.31
+```
+
+Formula t CI: (`r round(t.CI.31[1], digits = 3)`, `r round(t.CI.31[2], digits = 3)`)
+\
+Bootstrap percentile CI: (`r round(boot.CI.31[1], digits = 3)`, `r round(boot.CI.31[2], digits = 3)`)
+\
+Bootstrap t CI: (`r round(boot.t.CI.31[1], digits = 3)`, `r round(boot.t.CI.31[2], digits = 3)`)
+\
+Since it is two-sample setting with slightly skewed distributions and unequal sample sizes, I will report bootstrap t confidence interval. 
+
+**(d)**
+
+```{r}
+t.CI.31.2 <- t.test(nonsmoker, smoker, data = TXBirths2004, alternative = "greater")$conf
+```
+
+Formula t CI: (-9.871, $\infty$)
+
+### Problem 32
+
+**(a)**
+
+```{r, fig.align='center'}
+par(mfrow=c(1,2))
+qqnorm(unlist(MobileAds$m.cost_pre))
+qqline(unlist(MobileAds$m.cost_pre))
+qqnorm(unlist(MobileAds$m.cost_post))
+qqline(unlist(MobileAds$m.cost_post))
+par(mfrow=c(1,1))
+```
+
+Q-Q plots of both variables indicate that they are all skewed to the right. 
+
+**(b)**
+
+This is a matched pair dataset. Therefore, the costs advertiser paid before and after Google's recommendation are not independent. So, we can't use two-sample interval.
+
+\newpage
+
+**(c)**
+
+```{r, fig.align='center'}
+price.diff <- MobileAds$m.cost_pre-MobileAds$m.cost_post
+qqnorm(price.diff)
+qqline(price.diff)
+```
+
+**(d)**
+
+```{r}
+t.CI.32 <- t.test(price.diff)$conf
+```
+
+95% CI: (`r round(t.CI.32[1], digits = 3)`, `r round(t.CI.32[2], digits = 3)`)
+
+We are 95% confident that the price advertisers paid in average is higher from `r round(t.CI.32[1], digits = 3)` to `r round(t.CI.32[2], digits = 3)` from before and after Google's recommendations.
+
+**(e)**
+
+```{r}
+xbar.32 <- mean(price.diff)
+se.32 <- sd(price.diff)/sqrt(length(price.diff))
+
+Tstar.32 <- numeric(N)
+
+for (i in 1:N){
+  diffBoot <- sample(price.diff, length(price.diff), replace = TRUE)
+  SEstar <- sd(diffBoot)/sqrt(length(price.diff))
+  Tstar.32[i] <- (mean(diffBoot) - xbar.32)/SEstar
+}
+
+boot.t.CI.32 <- xbar.32 - quantile(Tstar.32, c(0.975,0.025))*se.32
+```
+
+95% bootstrap t CI: (`r round(boot.t.CI.32[1], digits = 3)`, `r round(boot.t.CI.32[2], digits = 3)`). Because the data is heavily skewed to the right, standard error estimated from formula t is smaller than the actual standard deviation (normality assumption). So, the formula t confidence interval narrower than bootstrap t confidence interval, which accounts for the skewness.  
+
+### Plus A
+
+```{r}
+youth <- read.csv("http://math.carleton.edu/Chihara/Stats275/Youth.csv")
+female <- subset(youth, select = Bullied, subset = Gender == "Female", drop = T)
+male <- subset(youth, select = Bullied, subset = Gender == "Male", drop = T)
+```
+
+**(i)**
+
+```{r}
+p.female <- mean(female == "Yes")
+p.male <- mean(male =="Yes")
+```
+
+Proportion of Yes (Female): `r round(p.female, digits = 3)`
+\
+Propotion of Yes (Male): `r round(p.male, digits = 3)`
+
+**(ii)**
+
+```{r, tidy=TRUE}
+z.CI.A <- prop.test(c(sum(female =="Yes"), sum(male =="Yes")), c(length(female), length(male)))$conf
+```
+
+95% CI: (-0.125, 0.063). We are 95% confident that in average the proportion of females who had bullied is from  -0.125 to 0.063 higher than that of males who had bullied. In other words, there is no significant evidence supporting that the proportion of female and male are different. 
+
+**(iii)**
+
+```{r, tidy=TRUE}
+z.CI.A.2 <- prop.test(c(sum(female =="Yes"), sum(male =="Yes")), c(length(female), length(male)), correct = FALSE)$conf
+```
+
+95% CI: (-0.118, 0.056). We are 95% confident that in average the proportion of females who had bullied is from  -0.118 to 0.056 higher than that of males who had bullied. The result does not change from the one with the continuity corrections.
+
+**(iv)**
+
+```{r, fig.align='center'}
+boot.A <- numeric(N)
+
+for (i in 1:N){
+  bootP.f <- sample(female, length(female), replace=TRUE)
+  bootP.m <- sample(male, length(male), replace=TRUE)
+  boot.A[i] <- mean(bootP.f == "Yes")-mean(bootP.m == "Yes")
+}
+
+hist(boot.A, main = "Bootstrap Distribution of Phat*", xlab = "Phat*")
+
+boot.CI.A <- quantile(boot.A, c(0.025,0.975))
+```
+
+95% bootstrap CI: (`r round(boot.CI.A[1], digits = 3)`, `r round(boot.CI.A[2], digits = 3)`). The bootstrap CI is approximately the same as 95% CI without the continuity correction. 
+
+### Plus B
+
+**(i)**
+
+```{r}
+samp.B <- rbinom(35, 1, 0.08)
+phat.B <- mean(samp.B == 1)
+```
+
+$\hat{p}$ = `r round(phat.B, digits = 3)`
+
+**(ii)**
+
+```{r, fig.align='center'}
+boot.B.1 <- numeric(N)
+
+for (i in 1:N){
+  bootP <- sample(samp.B, replace=TRUE)
+  boot.B.1[i] <- mean(bootP)
+}
+
+hist(boot.B.1, main = "Bootstrap Distribution of Phat*", xlab = "Phat*")
+
+boot.CI.B.1 <- quantile(boot.B.1, c(0.025,0.975))
+```
+
+95% Bootstrap CI: (0, `r round(boot.CI.B.1[2], digits = 3)`)
+
+**(iii)**
+
+```{r}
+z.CI.1 <- prop.test(sum(samp.B == 1), length(samp.B), correct = FALSE)$conf
+z.CI.2 <- prop.test(sum(samp.B == 1), length(samp.B))$conf
+```
+
+95% CI (without correction): (`r round(z.CI.1[1], digits = 3)`, `r round(z.CI.1[2], digits = 3)`)
+\
+95% CI (with correction): (`r round(z.CI.2[1], digits = 3)`, `r round(z.CI.2[2], digits = 3)`)
+\
+The CI with continuity correction is wider than CI withtout continuity correction. 
+
+**(iv)**
+
+```{r, fig.align='center'}
+samp.B.2 <- rbinom(35, 1, 0.4)
+phat.B.2 <- mean(samp.B.2 == 1)
+
+boot.B.2 <- numeric(N)
+
+for (i in 1:N){
+  bootP <- sample(samp.B.2, replace=TRUE)
+  boot.B.2[i] <- mean(bootP)
+}
+
+hist(boot.B.2, main = "Bootstrap Distribution of Phat*", xlab = "Phat*")
+
+boot.CI.B.2 <- quantile(boot.B.2, c(0.025,0.975))
+
+z.CI.3 <- prop.test(sum(samp.B.2 == 1), length(samp.B.2), correct = FALSE)$conf
+z.CI.4 <- prop.test(sum(samp.B.2 == 1), length(samp.B.2))$conf
+```
+
+95% Bootstrap CI: (`r round(boot.CI.B.2[1], digits = 3)`, `r round(boot.CI.B.2[2], digits = 3)`)
+\
+95% CI (without correction): (`r round(z.CI.3[1], digits = 3)`, `r round(z.CI.3[2], digits = 3)`)
+\
+95% CI (with correction): (`r round(z.CI.4[1], digits = 3)`, `r round(z.CI.4[2], digits = 3)`)
+
+**(v)**
+
+```{r, fig.align='center'}
+samp.B.3 <- rbinom(500, 1, 0.08)
+phat.B.3 <- mean(samp.B.3 == 1)
+
+boot.B.3 <- numeric(N)
+
+for (i in 1:N){
+  bootP <- sample(samp.B.3, replace=TRUE)
+  boot.B.3[i] <- mean(bootP)
+}
+
+hist(boot.B.3, main = "Bootstrap Distribution of Phat*", xlab = "Phat*")
+
+boot.CI.B.3 <- quantile(boot.B.3, c(0.025,0.975))
+
+z.CI.5 <- prop.test(sum(samp.B.3 == 1), length(samp.B.3), correct = FALSE)$conf
+z.CI.6 <- prop.test(sum(samp.B.3 == 1), length(samp.B.3))$conf
+```
+
+95% Bootstrap CI: (`r round(boot.CI.B.3[1], digits = 3)`, `r round(boot.CI.B.3[2], digits = 3)`)
+\
+95% CI (without correction): (`r round(z.CI.5[1], digits = 3)`, `r round(z.CI.5[2], digits = 3)`)
+\
+95% CI (with correction): (`r round(z.CI.6[1], digits = 3)`, `r round(z.CI.6[2], digits = 3)`)
+
+**(vi)**
+
+```{r, fig.align='center'}
+samp.B.4 <- rbinom(500, 1, 0.4)
+phat.B.4 <- mean(samp.B.4 == 1)
+
+boot.B.4 <- numeric(N)
+
+for (i in 1:N){
+  bootP <- sample(samp.B.4, replace=TRUE)
+  boot.B.4[i] <- mean(bootP)
+}
+
+hist(boot.B.4, main = "Bootstrap Distribution of Phat*", xlab = "Phat*")
+
+boot.CI.B.4 <- quantile(boot.B.4, c(0.025,0.975))
+
+z.CI.7 <- prop.test(sum(samp.B.4 == 1), length(samp.B.4), correct = FALSE)$conf
+z.CI.8 <- prop.test(sum(samp.B.4 == 1), length(samp.B.4))$conf
+```
+
+95% Bootstrap CI: (`r round(boot.CI.B.4[1], digits = 3)`, `r round(boot.CI.B.4[2], digits = 3)`)
+\
+95% CI (without correction): (`r round(z.CI.7[1], digits = 3)`, `r round(z.CI.7[2], digits = 3)`)
+\
+95% CI (with correction): (`r round(z.CI.8[1], digits = 3)`, `r round(z.CI.8[2], digits = 3)`)
+
+**(vii)**
+
+As we increase the sample size the discrepancy in the intervals between with and without the contiunity correction becomes smaller. And the smaller the p is the less difference between the intervals with and without continuity correction. What continuity correction does is add more margin (+/-0.5) to the number of successes (X = $n\cdot p$); therefore, the relative change in the interval will be bigger when p is smaller. For the same reason, if n gets bigger, adding or subtracting 0.5 margin from X does not substantially change the statistic, so the intervals with and without the correction do not exhibit a huge differences. 

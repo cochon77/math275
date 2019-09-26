@@ -1,0 +1,392 @@
+---
+title: "HW4"
+author: "Colin Pi"
+date: '2019 1 25 '
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, out.width = "60%", out.height = "50%")
+library(resampledata)
+library(stargazer)
+```
+
+##Chapter 4
+
+###Problem 30
+
+**(a)**
+\
+$F(t)=\int_{0}^{t}\lambda e^{-\lambda x}dx = 1 - e^{-\lambda x}$
+\
+$f(t)_{min} = n \cdot (1 - F(t))^{n-1} \cdot f(t) = n \cdot (e^{-\lambda t})^{n-1} \cdot \lambda e^{-\lambda t} = n \cdot \lambda e^{-n\lambda t}$
+
+**(b)**
+
+```{r, include=FALSE}
+mean.30.theo <- function(x){
+  x*25*7*exp(-7*25*x)
+}
+theo.mean.30 <- integrate(mean.30.theo, 0, Inf)
+```
+
+$f(t)_{min} = n \cdot \lambda e^{-n\lambda t}$
+\
+Let's define $\gamma = n \lambda$
+\
+$E(f(t)_{min}) = \tfrac{1}{\gamma} = 1/175$ = `r theo.mean.30$value`
+
+```{r}
+N <- 10^5
+min.30 <- numeric(N)
+
+for (i in 1:N){
+  x <- rexp(25, 7)
+  min.30[i] <- min(x)
+}
+
+sim.mean.30 <- mean(min.30)
+```
+
+The simulated expected value is `r sim.mean.30`
+
+##Chapter 5
+
+###Problem 7
+
+**(a)**
+Male skateboarders could have been more open-minded and friendly to female and male experimenter. (If I were the person who performed trick, I also would have been more approachable to the female than male experimenter). Lack of the samples from the male counterpart can be attributed to the samples' incomprehensive representation of the population. As the bootstrap result is affected by bias in a way such that $\hat{\theta}$ is biased for $\theta$ and $\hat{\theta}^*$ for $\hat{\theta}$, underepresentation issue significantly bias the outcome. 
+
+**(b)**
+If the experimenters knew about the test, they could have consciously/unconciously taken some actions or behaviors that might bias the outcome of the test. For instance, the female experimenter could have done something that makes her look more attractive and enticing, such as wearing a makeup or wearing sexier outfits. Such behaviors can bring in some confounding factors that may bias the result. 
+
+###Problem 16
+
+**(a)**
+
+```{r, fig.align='center'}
+math.b <- subset(MathAnxiety, select = AMAS, subset = Gender == "Boy", drop=T) 
+math.g <- subset(MathAnxiety, select = AMAS, subset = Gender == "Girl", drop=T)
+
+par(mfrow=c(1,2))
+hist(math.b, main = "Distribution of AMAS, Boys", xlab = "AMAS")
+abline(v = mean(math.b), lty = 5, col = "blue")
+abline(v = median(math.b), lty = 1, col = "red")
+legend("topright",legend = c("Median","Mean"), col = c("red","blue"), pch = c(19,19))
+
+hist(math.g, main = "Distribution of AMAS, Girls", xlab = "AMAS")
+abline(v = mean(math.g), lty = 5, col = "blue")
+abline(v = median(math.g), lty = 1, col = "red")
+legend("topright",legend = c("Median","Mean"), col = c("red","blue"), pch = c(19,19))
+
+par(mfrow=c(1,1))
+```
+
+The mean of boys' AMAS is slightly smaller than the mean of girls' AMAS, and the boys' distribution is slightly less spreaded than girls'. 
+
+######Boy's Distribution:
+
+```{r, results='asis'}
+stargazer(data.frame(math.b), header = FALSE, title = "Summary Statistics")
+```
+
+- Approximately normal (no skewness)
+
+######Girl's Distribution:
+
+```{r, results='asis'}
+stargazer(data.frame(math.g), header = FALSE, title = "Summary Statistics")
+```
+- Approximately normal (no skewness)
+
+**(b)**
+
+```{r, tidy=TRUE, fig.align='center', results='asis'}
+set.seed(5)
+N <- 10^5
+
+boot.AMAS.16 <- numeric(N) 
+
+for(i in 1:N){
+  sampleB <- sample(math.b, length(math.b), replace = TRUE)
+  sampleG <- sample(math.g, length(math.g), replace = TRUE)
+  boot.AMAS.16[i] = mean(sampleB) - mean(sampleG)
+}
+
+hist(boot.AMAS.16, main = "Bootstrap Distribution of Mean Difference",
+     xlab = "Mean Difference of AMAS")
+stargazer(data.frame(boot.AMAS.16), header = FALSE, title = "Summary Statistics")
+ci.boot.16 <- quantile(boot.AMAS.16, c(0.025, 0.975))
+```
+- 95% bootstrap percentile confidence interval: (`r ci.boot.16`)
+\
+We are 95% confident that the average of Boys' AMAS is from `r -ci.boot.16[2]` to `r -ci.boot.16[1]` lower than the average of Girls' AMAS
+
+**(c)**
+
+```{r}
+observed.16 <- mean(math.b) - mean(math.g)
+bias.boot.16 <- mean(boot.AMAS.16) - observed.16
+bias.frac.16 <- bias.boot.16/sd(boot.AMAS.16)
+```
+- Bias: 0.0003834806
+- Faction of the bootstrap standard error: 0.000715419
+
+\newpage
+
+**(d)**
+
+$$
+\textit{H}_{0}: {\mu}_{Boys} = {\mu}_{Girls}
+$$
+$$
+\textit{H}_{\alpha}: {\mu}_{Boys} \neq {\mu}_{Girls}
+$$
+Where $\mu$ is the mean of AMAS.
+
+```{r, tidy=TRUE, fig.align='center'}
+set.seed(5)
+pooled.16 <- subset(MathAnxiety, select = AMAS, drop = T)
+perm.16 <- numeric(N)
+for(i in 1:N){
+  index <- sample(length(pooled.16), size = length(math.b), replace=FALSE)
+  perm.16[i] <- mean(pooled.16[index]) - mean(pooled.16[-index])
+}
+hist(perm.16, 
+     main = "Distribution of Permutation Distribution", 
+     xlab = "Mean Differences of AMAS")
+abline(v = observed.16, lty = 5, col = "blue")
+p.perm.16 <- (sum(perm.16 <= observed.16)+1)/(N+1)*2
+```
+
+The permutation test gives a p-value of 0.0009399906, which means there is 0.0009399906 chance to get the observed different if chance is the only source of explaining the variability in mean differences in AMAS. Such a small p-value gives a strong evidence to reject the null hypothesis that there is no difference between the means of Boys' and Girls' AMAS.
+
+###Problem 18
+
+**(a)**
+
+```{r, results='asis'}
+stargazer(Groceries, header = FALSE, title = "Summary Statistics")
+```
+
+\newpage
+
+**(b)**
+
+```{r, fig.align='center'}
+price.diff.18.1 <- Groceries$Target - Groceries$Walmart
+boot.price.18.1 <- numeric(N)
+
+for(i in 1:N){
+  samp <- sample(price.diff.18.1, length(price.diff.18.1), replace = TRUE)
+  boot.price.18.1[i] <- mean(samp)
+}
+
+ci.boot.18.1 <- quantile(boot.price.18.1, c(0.025,0.975))
+```
+- 95% bootstrap percentile confidence interval: (`r ci.boot.18.1`)
+\
+We are 95% confident that the average price in Target is from `r ci.boot.18.1[1]` to `r ci.boot.18.1[2]` higher than the average price in Walmart. In other words, we cannot conclude that there is a difference in average price between Target and Walmart. 
+
+**(c)**
+
+```{r,tidy=TRUE, fig.align='center'}
+hist(price.diff.18.1, main = "Histogram of Price Difference", xlab = "Price Difference")
+quaker.oats <- subset(Groceries, subset = Product == "Quaker Oats Life Cereal  Original ")
+rownames(quaker.oats) <- NULL
+knitr::kable(quaker.oats)
+```
+
+We can see that the price of Quaker Oats Life Cereal Original is almost twice expensive in Walmart as it is in Target. 
+
+**(d)**
+
+```{r, tidy=TRUE, fig.align='center'}
+Groceries2 <- subset(Groceries, Product != "Quaker Oats Life Cereal  Original ", select = Product:UnitType)
+price.diff.18.2 <- Groceries2$Target - Groceries2$Walmart
+boot.price.18.2 <- numeric(N)
+
+for(i in 1:N){
+  samp <- sample(price.diff.18.2, length(price.diff.18.2), replace = TRUE)
+  boot.price.18.2[i] <- mean(samp)
+}
+
+ci.boot.18.2 <- quantile(boot.price.18.2, c(0.025,0.975))
+```
+- 95% bootstrap percentile confidence interval: (`r ci.boot.18.2`)
+\
+We are 95% confident that the average of price in Target is from `r ci.boot.18.2[1]` to `r ci.boot.18.2[2]` higher than the average of price in Walmart.
+
+
+###Problem 21
+
+**(a)**
+
+```{r, tidy=TRUE, fig.align='center'}
+book.m <- subset(BookPrices, select = Price, subset = Area == "Math & Science", drop=T) 
+book.s <- subset(BookPrices, select = Price, subset = Area == "Social Sciences", drop=T)
+
+par(mfrow=c(1,2))
+hist(book.m, main = "Math & Science", xlab = "Price")
+abline(v = mean(book.m), lty = 5, col = "blue")
+abline(v = median(book.m), lty = 1, col = "red")
+legend("topright",legend = c("Median","Mean"), col = c("red","blue"), pch = c(19,19))
+
+hist(book.s, main = "Social Sciences", xlab = "Price")
+abline(v = mean(book.s), lty = 5, col = "blue")
+abline(v = median(book.s), lty = 1, col = "red")
+legend("topright",legend = c("Median","Mean"), col = c("red","blue"), pch = c(19,19))
+
+par(mfrow=c(1,1))
+```
+
+\newpage
+
+######Distribution of Price, Math & Science:
+
+```{r, results='asis'}
+stargazer(data.frame(book.m), header = FALSE, title = "Summary Statistics")
+```
+
+- Bimodal but no serious skewness.
+
+######Distribution of Price, Social Sciences:
+
+```{r, results='asis'}
+stargazer(data.frame(book.s), header = FALSE, title = "Summary Statistics")
+```
+
+- Right skewed, bimodal.
+
+**(b)**
+
+```{r, tidy=TRUE, fig.align='center', results='asis'}
+boot.book.math <- numeric(N)
+
+for(i in 1:N){
+  samp <- sample(book.m, length(book.m), replace = TRUE)
+  boot.book.math[i] <- mean(samp)
+}
+
+hist(boot.book.math, 
+     main = "Bootstrap Distribution of Means of Book Price, Math & Science", 
+     xlab = "Means of Book Price")
+abline(v = mean(boot.book.math), lty = 5, col = "blue")
+abline(v = median(boot.book.math), lty = 1, col = "red")
+legend("topright",legend = c("Median","Mean"), col = c("red","blue"), pch = c(19,19))
+
+stargazer(data.frame(boot.book.math), header = FALSE, title = "Summary Statistics")
+```
+
+- The distribution is approximately normally distributed, with mean of `r mean(boot.book.math)` and standrard error of `r sd(boot.book.math)`.
+
+```{r, tidy=TRUE, fig.align='center', results='asis'}
+boot.book.social <- numeric(N)
+
+for(i in 1:N){
+  samp <- sample(book.s, length(book.s), replace = TRUE)
+  boot.book.social[i] <- mean(samp)
+}
+
+hist(boot.book.social, 
+     main = "Bootstrap Distribution of Means of Book Price, Social Sciences", 
+     xlab = "Means of Book Price")  
+abline(v = mean(boot.book.social), lty = 5, col = "blue")
+abline(v = median(boot.book.social), lty = 1, col = "red")
+legend("topright",legend = c("Median","Mean"), col = c("red","blue"), pch = c(19,19))
+
+stargazer(data.frame(boot.book.social), header = FALSE, rownames=FALSE, title = "Summary Statistics")
+```
+
+- The distribution is approximately normally distributed, with mean of `r mean(boot.book.social)` and standard error of `r sd(boot.book.social)`.
+
+\newpage
+
+**(c)**
+
+```{r, tidy=TRUE, fig.align='center'}
+set.seed(5)
+
+boot.book.ratio <- numeric(N)
+
+for(i in 1:N){
+  math <- sample(book.m, length(book.m), replace = TRUE)
+  soci <- sample(book.s, length(book.s), replace = TRUE)
+  boot.book.ratio[i] <- mean(math)/mean(soci)
+}
+
+hist(boot.book.ratio, 
+     main = "Bootstrap Distribution of Ratio of Means", 
+     xlab = "Ratio of Means")
+abline(v = mean(boot.book.ratio), lty = 5, col = "blue")
+abline(v = median(boot.book.ratio), lty = 1, col = "red")
+legend("topright",legend = c("Median","Mean"), col = c("red","blue"), pch = c(19,19))
+```
+
+- The distribution is skewed to the right. 
+
+**(d)**
+
+```{r}
+ci.boot.book <- quantile(boot.book.ratio, c(0.025,0.975))
+```
+
+- 95% bootstrap percentile confidence interval: (`r ci.boot.book`)
+\
+We are 95% confident that the average price of Math & Science books is from `r ci.boot.book[1]` to `r ci.boot.book[2]` times the the average price of Social Sciences books.
+
+```{r}
+bias.boot.21 <- mean(boot.book.ratio) - (mean(book.m)/mean(book.s))
+bias.frac.21 <- bias.boot.21/sd(boot.book.ratio)
+```
+- Bias: `r bias.boot.21`
+- Faction of the bootstrap standard error: `r bias.frac.21`
+
+\newpage
+
+###A
+
+```{r}
+FlightDelays$Delayed15 <- ifelse(FlightDelays$Delay < 15, "Yes", "No")
+American <- subset(FlightDelays, select = Delayed15, subset = Carrier == "AA", drop=T)
+United <- subset(FlightDelays, select = Delayed15, subset = Carrier == "UA", drop=T)
+```
+
+1.
+
+```{r}
+prop.aa <- mean(American == "Yes")
+prop.ua <- mean(United == "Yes")
+```
+
+$P(Delay < 15)_{American}$ = `r prop.aa`
+\
+$P(Delay < 15)_{United}$ = `r prop.ua`
+
+2.
+
+```{r, tidy=TRUE}
+set.seed(5)
+boot.delay.A <- numeric(N)
+
+for(i in 1:N){
+  aa <- sample(American, length(American), replace = TRUE)
+  ua <- sample(United, length(United), replace = TRUE)
+  boot.delay.A[i] <- mean(aa == "Yes") - mean(ua == "Yes")
+}
+
+ci.boot.delay.A <- quantile(boot.delay.A, c(0.025,0.975))
+```
+- 95% bootstrap percentile confidence interval: (`r ci.boot.delay.A`)
+
+3.
+
+We are 95% confident that the proportion of flights that were delayed less than 15 minutes for American Airline is from `r ci.boot.delay.A[1]` to `r ci.boot.delay.A[2]` higher than the proportion for United Airline.
+
+4. 
+
+```{r}
+bias.boot.delay.A <- mean(boot.delay.A) - (prop.aa - prop.ua)
+```
+
+- Bias = -1.136161e-06

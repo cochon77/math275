@@ -1,0 +1,98 @@
+---
+title: "Plus A"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, out.width = "50%")
+library(resampledata)
+```
+
+##Plus A: Earthquake time difference case study
+
+###Preparation: Defining some helper functions
+
+We must first define some functions to help us with the calculations of the parameter estimates.
+
+We define the function <tt>weibull.shape</tt> which takes input shape parameter k and
+the data to compute
+\[
+f(k, \mbox{data}) = 
+(1/k)+ (1/n)*\sum (\log(x_i)) +(1/\alpha)\sum x_i^k\log(x_i)
+\]
+where $\alpha= \sum x_i^k$.
+
+```{r}
+weibull.shape <- function(k, data)
+{
+  numer <- colSums(outer(data, k, "^") * log(data))
+  denom <- colSums(outer(data, k, "^"))
+  numer/denom - 1/k - mean(log(data))
+}
+```
+
+####Another helper function
+This function takes input shape parameter k
+ and data to compute
+  $k^{th}$ root of $(1/n) \sum x_i^k$, where 
+ n=number of data values.
+
+```{r}
+weibull.scale <- function(k, data)
+{
+  mean(data^k)^(1/k)
+}
+```
+
+####Built-in helper function
+`uniroot` is a built-in R function which estimates the root of a function.
+
+User provide this function any arguments needed for function, and a guess of two values a, b around root.
+If `lower = a, upper = b` are your two guesses,
+f(a) and f(b) must be opposite signs.
+
+###Now, the analysis
+
+The data set <tt>Turbine</tt> is in the <tt>resampledata</tt> package (loaded in set-up step above.)
+
+We use the <tt>uniroot</tt> command to solve for k:
+
+\[
+f(k, \mbox{data}) = 
+(1/k)+ (1/n)*\sum (\log(x_i)) +(1/\alpha)\sum x_i^k\log(x_i) = 0
+\]
+
+```{r}
+time <- Quakes$TimeDiff
+#alternatively, wind <- subset(Turbine, select=AveSpeed, drop=TRUE)
+
+#estimate the shape parameter k
+k.est <- uniroot(weibull.shape, data = time, lower = 0.8,upper = 1)$root
+```
+The output $root gives use the estimate of k (`r k.est`).
+
+With estimate of shape parameter k, now find estimate
+of scale parameters $\lambda$.
+
+```{r}
+lamda.est <- weibull.scale(k.est, time)
+```
+
+Now we have esimates for k and $\lambda$ (`r lamda.est`).
+
+Plot histogram with density curve overlap
+The <tt>prob=TRUE</tt> argument scales histogram to area 1.
+
+```{r, fig.align='center'}
+hist(time, main = "Distribution of average time difference between earthquakes",
+     xlab = "days", prob = TRUE, ylim=c(0, 0.06))
+
+curve(dweibull(x, k.est, lamda.est), add = TRUE, col = "blue", lwd = 2)
+```
+
+For the empirical cdf:
+
+```{r, fig.align='center'}
+plot.ecdf(time,main = "ECDF of time difference")
+curve(pweibull(x,k.est,lamda.est), add = TRUE, col = "blue", lwd = 2)
+```

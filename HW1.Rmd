@@ -1,0 +1,339 @@
+---
+title: 'HW #1'
+author: "Colin Pi"
+date: "January 11th, 2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, out.width = "50%")
+library(resampledata)   #for textbook data sets
+library(dplyr)
+```
+
+#Chapter 1
+
+###Problem 1
+
+**(a)** 
+
+Population: High school students
+\
+
+Sample: 1,500 High school students 
+\
+
+Statistic: 47 percent 
+
+**(b)** 
+
+Population: US population in 2010
+\
+
+Parameter: 9.6 percent
+
+**(c)** 
+
+Population: NBA players played in 2006-2007 season
+\
+
+Parameter: 78.93 in.
+
+**(d)** 
+
+Population: Nation's adults, age 18 or older, in 2016
+\
+
+Sample: 2106 of national adults
+\
+
+Statistic: 19 percent
+
+###Problem 2
+
+**(a)** Population 
+
+**(b)** Parameter, as it is from the population
+
+###Problem 4
+
+**(a)** Playing tetris for at least 10 uninterrupted minutes and fill out a simple log detailing their activities.
+
+**(b)** Since the researchers know who got the treatment and who didn't get, it is not a double blind study.
+
+**(c)** At least in this sample, yes.
+
+**(d)** Since the samples are not collected in a randomized manner, we can't generalize the results to population.
+
+###Problem 5
+
+**(a)** Observational Study
+
+**(b)** No, the groups of people who drink/not drink alcohol are not randomly assigned; therefore, we cannot conclude cause and effect relations from these results. In that researchers cannot randomly assign "treatment" in observational studies, we cannot draw a cause and effect relations from the observational studies result.  
+
+###Problem 10
+
+**(a)** $\frac{n}{N}$ = $\frac{1,000}{100,000,000}$ = $\frac{1}{100,000}$
+
+**(b)** $(1-\frac{1}{100,000})^{2000}$ = `r (1-1/100000)^2000`
+
+**(c)** $(1-\frac{1}{100,000})^{n}$ = 0.5 $\rightarrow$ n*$\log(1-\frac{1}{100,000})$ = $\log(0.5)$ $\rightarrow$ n = $\frac{\log(0.5)}{\log(1-\frac{1}{100,000})}$ $\approx$ 69,314
+
+#Chapter 2
+
+###Problem 1
+
+
+```{r}
+x <- c(3, 5, 8, 15, 20, 21, 24)
+meanX <- mean(x)
+medianX <- median(x)
+
+logX <- log(x)
+meanLogX <- mean(logX)
+medianLogX <- median(logX)
+```
+
+- $\bar{x}$ = `r meanX`
+
+- $\textit{m}$ = `r medianX` 
+
+- $\bar{x}^{\prime}$ = `r meanLogX` 
+
+- $\textit{m}^{\prime}$ = `r medianLogX` 
+
+- $\ln(\bar{x})$ = `r log(meanX)` $\neq$ $\bar{x}^{\prime}$ = `r meanLogX`
+
+- $\ln(\textit{m})$ = `r log(medianX)` = $\textit{m}^{\prime}$
+
+###Problem 3
+
+**(a)** Not always.
+
+**(b)** Not always.
+
+**(c)** $\textit{f(x)}$ should be linear.
+
+**(d)** $\textit{f(x)}$ should be either increasing or decreasing function, and n should be odd.
+
+###Problem 4
+
+**(a)**
+
+``` {r, fig.align="center", tidy=TRUE}
+DepartTime <- subset(FlightDelays, select = DepartTime, drop = T)
+knitr::kable(table(FlightDelays$DepartTime), col.names = c("Departure Time","Number of Flights"), caption = "Table of Departure Time")
+barplot(table(FlightDelays$DepartTime), main = "Bar Charts of Departure Time")
+```
+
+**(b)**
+
+```{r, tidy=TRUE}
+knitr::kable(table(FlightDelays$Day, FlightDelays$Delayed30),
+             caption = "Contingency Table of the Variables Day and Delayed30")
+```
+
+```{r, tidy=TRUE}
+knitr::kable(prop.table(table(FlightDelays$Day, FlightDelays$Delayed30), 1), 
+             caption = "Contingency Table of the Variables Day and Delayed30 (in proportion)")
+```
+
+**(c)**
+
+```{r, fig.align="center", tidy=TRUE}
+boxplot(FlightLength ~ Delayed30, data = FlightDelays, 
+        main = "Lengths of the Flights, grouped by Delayed30")
+```
+
+**(d)**
+
+Even though the distribution of the length of flight of the group with departure delayed at least 30 minutes is more spread than the other group, there is no huge difference in the median and mean of the legnth of flight between these two groups. So I would say there is no strong relationship between flight time and whether or not the departure is delayed more than 30 minutes.  
+
+###Problem 6
+
+**(a)**
+
+```{r, fig.align="center", tidy=TRUE}
+knitr::kable(table(Recidivism$Recid), col.names=c("Recidivated?","Number of Prisoners"),
+             caption = "Table of Recid Variable")
+```
+
+```{r, fig.align = "center", tidy=TRUE}
+barplot(table(Recidivism$Recid), main = "Bar Charts of Recid Variable")
+```
+
+\newpage
+
+**(b)**
+
+```{r, tidy=TRUE}
+knitr::kable(table(Recidivism$Age25, Recidivism$Recid),
+             caption = "Contingency Table of Recidivism (Recid) by Under or Over Age 25")
+```
+
+```{r, tidy=TRUE}
+knitr::kable(prop.table(table(Recidivism$Age25, Recidivism$Recid), 1),
+             caption = "Contingency Table of Recidivism (Recid) by Under or Over Age 25 (in proportion)")
+```
+
+**(c)**
+
+```{r, fig.align="center", tidy=TRUE}
+dropNoRecid <- Recidivism %>% filter(Type != "No Recidivism") %>% droplevels
+boxplot(Days ~ Type, data = dropNoRecid, main = "Boxplot of Number of Days to Recidivism
+Grouped by Type of Violation")
+```
+
+1. The distribution of number of days to recidivism of New crime group is normally distributed around the median, while that of Technical crime group is right-skewed.
+
+2. The median of number of days to recidivism of Technical crime group is smaller than that of New crime group. 
+
+3. The spread of number of days to recidivism days of New crime group is bigger than that of Technical crime group.
+
+\newpage
+
+**(d)**
+
+```{r, tidy=TRUE}
+knitr::kable(quantile(Recidivism$Days, na.rm = TRUE), col.names = c("Quartile"), 
+             caption = "Quartiles of the Number of Days to Recidivism")
+```
+
+**(e)**
+
+```{r, fig.align="center", tidy=TRUE}
+under25 <- subset(Recidivism, select = Days, subset = Age25 == "Under 25", drop = T)
+over25 <- subset(Recidivism, select = Days, subset = Age25 == "Over 25", drop = T)
+plot.ecdf(under25, col = "red", xlab = "Days")
+plot.ecdf(over25, col = "blue", pch = 2, add = TRUE)
+abline(v = 400, lty = 1)
+legend("topleft",legend = c("Under 25","Over 25"), col = c("red","blue"), pch = c(19,2))
+```
+
+- Under 25: about 50 percent sent back to prison after 400 days
+
+- Over 25: about 55 percent sent back to prison after 400 days
+
+###Problem 10
+
+**(a)**
+
+If pdf is $\textit{f(x)}$ = $\lambda{e}^{-{\lambda}x}$, $\textit{F}_X(x)$ = 1 - ${e}^{-{\lambda}x}$
+
+- 1st quartile: $1 - {e}^{-{\lambda}q_1}$ = 0.25 $\rightarrow$ ${e}^{-{\lambda}q_1}$ = 0.75 $\rightarrow$ $q_1$ = $-\frac{ln(0.75)}{\lambda}$
+
+- Median: $1 - {e}^{-{\lambda}*med}$ = 0.5 $\rightarrow$ ${e}^{-{\lambda}*med}$ = 0.5 $\rightarrow$ med = $-\frac{ln(0.5)}{\lambda}$
+
+- 3rd quartile: $1 - {e}^{-{\lambda}q_3}$ = 0.75 $\rightarrow$ ${e}^{-{\lambda}q_3}$ = 0.25 $\rightarrow$ $q_3$ = $-\frac{ln(0.25)}{\lambda}$
+
+**(b)**
+
+If pdf is $\textit{f(x)}$ = $\frac{\alpha}{x^{\alpha+1}}$, $\textit{F}_X(x)$ = 1 - $\frac{1}{x^{\alpha}}$
+
+- 1st quartile: $1 - \frac{1}{q_1^{\alpha}}$ = 0.25 $\rightarrow$ $\frac{1}{q_1^{\alpha}}$ = 0.75 $\rightarrow$ $q_1$ = $\sqrt[\alpha]{\frac{1}{0.75}}$
+
+- Median: $1 - \frac{1}{med^{\alpha}}$ = 0.5 $\rightarrow$ $\frac{1}{med^{\alpha}}$ = 0.75 $\rightarrow$ med = $\sqrt[\alpha]{\frac{1}{0.5}}$
+
+- 3rd quartile: $1 - \frac{1}{q_3^{\alpha}}$ = 0.75 $\rightarrow$ $\frac{1}{q_3^{\alpha}}$ = 0.25
+$\rightarrow$ $q_3$ = $\sqrt[\alpha]{\frac{1}{0.25}}$
+
+###Problem 12
+
+**(a)**
+
+```{r}
+per30 <- qnorm(0.3,10,17)
+per60 <- qnorm(0.6,10,17)
+```
+
+- 30th percentile = `r per30` 
+
+- 60th percentile = `r per60`
+
+**(b)**
+
+```{r}
+quan0.1 <- qnorm(0.1,25,32)
+quan0.9 <- qnorm(0.9,25,32)
+```
+
+- 0.1 quantile = `r quan0.1`
+
+- 0.9 quantile = `r quan0.9`
+
+**(c)**
+
+```{r}
+upper25 <- qnorm(0.75,25,32)
+```
+
+The point that marks off upper 25 percent is `r upper25`
+
+###Problem 13
+
+**(a)** $1 - {e}^{-{\lambda}q_{0.05}}$ = 0.05 $\rightarrow$ ${e}^{-{\lambda}q_{0.05}}$ = 0.95 $\rightarrow$ $q_{0.05}$ = $-\frac{ln(0.95)}{\lambda}$
+
+**(b)**
+
+```{r}
+q0.05 <- -(log(0.95)/4)
+qexp_0.05 <- qexp(0.05,4)
+```
+
+$-\frac{ln(0.95)}{4}$ = `r q0.05` = `qexp(0.05,4)`
+
+###Problem 14
+
+- $\frac{q_1^2}{a^2}$ = $\frac{\alpha}{2}$ $\rightarrow$ $q_1^2$ = $a^2\frac{\alpha}{2}$ $\rightarrow$ $q_1$ = $a\sqrt{\frac{\alpha}{2}}$
+
+- $\frac{q_2^2}{a^2}$ = $1 - \frac{\alpha}{2}$ $\rightarrow$ $q_2^2$ = $a^2(1-\frac{\alpha}{2})$ $\rightarrow$ $q_2$ = $a\sqrt{1-\frac{\alpha}{2}}$
+
+###Problem 17
+
+**(a)**
+
+```{r, fig.align="center"}
+x2 <- rnorm(15) # random sample of size 15 from N(0,1)
+par(mfrow=c(1,2)) # set up to place 2 graphs side by side
+qqnorm(x2)
+qqline(x2)
+hist(x2)
+```
+
+The repeatitions of the practice illustrate that the distribution of sample is most of the times distributed normally but sometimes do not. When it is normally distributed, the histogram is unimodal and roughly symmetric and in a bellshape. In this case, Q-Q plot also falls on a straight line for the most of the time. However, I could observe some cases that the histogram is skewed  or bimodal. In this case, Q-Q plot does not fall on a straight line but shows a concave or convex pattern with respect to the straight line. 
+
+**(b)**
+
+```{r, fig.align="center"}
+x3 <- rnorm(30) # random sample of size 15 from N(0,1)
+par(mfrow=c(1,2)) # set up to place 2 graphs side by side
+qqnorm(x3)
+qqline(x3)
+hist(x3)
+```
+
+```{r, fig.align="center"}
+x4 <- rnorm(60) # random sample of size 15 from N(0,1)
+par(mfrow=c(1,2)) # set up to place 2 graphs side by side
+qqnorm(x4)
+qqline(x4)
+hist(x4)
+```
+
+```{r, fig.align="center"}
+x5 <- rnorm(100) # random sample of size 15 from N(0,1)
+par(mfrow=c(1,2)) # set up to place 2 graphs side by side
+qqnorm(x5)
+qqline(x5)
+hist(x5)
+```
+
+**(c)** As the size of the sample increases, the sample distribution becomes more normally distributed. 
+
+###Problem 19
+
+**(a)** 0.15 * 20 = 3
+
+**(b)** 0.2 * 20 = 4
+
+**(c)** (0.85-0.55) * 20 = 6 

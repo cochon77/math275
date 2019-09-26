@@ -1,0 +1,364 @@
+---
+title: "HW9"
+author: "Colin Pi"
+date: "2/26/2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, out.width = "60%")
+library(resampledata)
+```
+
+## Chapter 8
+
+### Problem 24
+
+$1-\beta$ = $P(Z > \dfrac{\mu_{0}-\mu_{1}}{\sigma} + q_{0.95})$ = $P(Z > \dfrac{25-27}{4/\sqrt{20}} + q_{0.95})$ = `r round(pnorm(-2/(4/sqrt(30))+qnorm(0.95), lower.tail = FALSE), digits = 4)`
+
+### Problem 25
+
+0.01 = $P(Reject \ H_{0}\ | \ H_{0} \ is \ true) = P(X > C \ | \ \mu \leq 1) = P(\dfrac{\bar{X}-1}{0.3/\sqrt{n}} > \dfrac{C-1}{0.3/\sqrt{n}})$
+\
+$q_{0.99} = \dfrac{C-1}{0.3\sqrt{n}}$, $C = 1+q_{0.99}\cdot 0.3\sqrt{n}$
+\
+$1-\beta$ = 0.9 = $P(reject \ H_{0} \ | \ H_{\alpha} \ is \ true) = P(X > 1+q_{0.99}\cdot 0.3\sqrt{n} \ | \ \mu> 1.2) = P(Z > q_{0.99} + \dfrac{1-1.2}{0.3/\sqrt{n}})$
+\
+$q_{0.1} = q_{0.99} + \dfrac{1-1.2}{0.3/\sqrt{n}}$ $n = (0.3/0.2(q_{0.99}-q_{0.1}))^2 \approx 29.2881 \therefore n \geq 30$ 
+
+### Problem 32
+
+**(a)** 
+
+$\alpha^*  = P(reject \ H_{0}\ | \ H_{0} \ is \ true) = P(X > 9 \ | \ \lambda = 0.25) = \int_{9}^{\infty}0.25e^{-0.25x}dx$ = `r round(pexp(9, 0.25, lower.tail = FALSE), digits = 4)`
+\
+$\alpha = 1-\sum_{0}^{2}{10 \choose k}(0.154)^k(1-0.154)^{10-k}$ = `r round(1-pbinom(2,10,pexp(9, 0.25, lower.tail = FALSE)), digits = 4)`
+
+**(b)**
+
+$p = P(X > 9 \ | \ \lambda = 0.15) = \int_{9}^{\infty}0.15e^{-0.15x}dx$ = `r round(pexp(9, 0.15, lower.tail = FALSE), digits = 4)`
+\
+Power = $1-\sum_{0}^{2}{10 \choose k}(0.259)^k(1-0.259)^{10-k}$ = `r round(1-pbinom(2,10,pexp(9, 0.15, lower.tail = FALSE)), digits = 4)`
+
+### Problem 35
+
+**(a)**
+
+$\beta$ = $P(not\ reject \ H_{0} \ | \ H_{\alpha} \ true) = P(x < 3/4 \ | \ \theta > 2) = \int_{0}^{3/4}(1+\theta)x^{\theta}dx = x^{\theta+1}|_{0}^{3/4} = {\dfrac{3}{4}}^{\theta+1}$
+\
+Power = $1-\beta = 1 - {\dfrac{3}{4}}^{\theta+1}$
+
+**(b)**
+
+```{r, fig.align='center'}
+curve(1-(3/4)^(x+1), from = 2, to = 20, ylab = "Power", xlab = "Theta", main = "Power v. Theta")
+```
+
+### Problem 38
+
+$\alpha^* = 1 - (1-\alpha)^{1/k} = 1 - (1-0.1)^{1/12}$ = `r round(1-(1-0.1)^(1/12), digits = 5)`
+
+### Problem 39
+
+k = $19 \choose 2$ = 171
+\
+$\alpha^* = 1 - (1-\alpha)^{1/k} = 1 - (1-0.05)^{1/171}$ = 0.0003
+
+## Chapter 10
+
+### Problem 1
+
+**(a)**
+
+```{r, tidy=TRUE}
+table.1 <- table(Recidivism$Recid, Recidivism$Gender)
+knitr::kable(table.1, caption = "Contingency Table of the Gender and Recidivism")
+```
+
+**(b)**
+
+Test of Independence. The samples are selected from the same population. 
+
+$$
+H_{0}: Gender\ and\ Recidivism\ are\ independent.
+$$
+$$
+H_{\alpha}: Gender\ and\ Recidivism\ are\ not\ independent.
+$$
+
+**(c)**
+
+```{r}
+expect.1 <- outer(rowSums(table.1), colSums(table.1)) / sum(table.1)
+knitr::kable(expect.1, caption = "Expected Counts of the Gender and Recidivism")
+```
+
+```{r, tidy=TRUE, fig.align='center'}
+stat.1 <- sum((table.1 - expect.1)^2 / expect.1)
+df.1 <- (2-1)*(2-1)
+curve(dchisq(x, df.1), from = 0, to = 30, xlab = "test statistic", ylab = "density", main = "Chi-Square Distribution (df = 1)")
+abline(v = stat.1, col = "blue")
+p.1 <- pchisq(stat.1, 1, lower.tail = FALSE)
+```
+
+The probability that we obtain a statistic as or more extreme that the observed test statistic is $1.12\cdot10^{-7}$. So, there is a significant evidence to reject the claim that the gender and recidivism are independent. 
+
+### Problem 4
+
+**(a)** Test of Independence. 
+
+$$
+H_{0}: Preference\ for\ instagram\ and\ snapchat\ are\ independent\ from\ classes.
+$$
+$$
+H_{\alpha}: Preference\ for\ instagram\ and\ snapchat\ are\ not\ independent\ from\ classes
+$$
+
+**(b)**
+
+```{r, warning=FALSE}
+table.4 <- rbind(c(2,5), c(7,1))
+colnames(table.4) <- c("Instagram","Snapchat")
+row.names(table.4) <- c("Junior","Senior")
+p.4 <- chisq.test(table.4)$p.value
+```
+
+The p-value of `chisq.test` is `r round(p.4, digits = 4)`, suggesting that there is not enough evidence to reject the claim that the preference for Instagram or Snapchat isn't differ between the Juniors and Seniors.
+
+**(c)**
+
+```{r}
+fisher.4 <- fisher.test(table.4)$p.value
+perm.4 <- chisq.test(table.4, simulate.p.value = TRUE, B = 10^5-1)$p.value
+```
+
+The p-value of Fisher's exact test is `r round(fisher.4, digits = 4)`, and the p-value of the permutation test is `r round(perm.4, digits = 4)`. Both test results suggest that there is an enough evidence to reject the claim that the preference for Instagram or Snapchat isn't differ between the Juniors and Seniors.
+
+**(d)**
+
+For 2x2 categorical variables with small cell counts, it's better to use Fisher's exact test than $C \sim \chi^2_{df = ncol-1 \cdot nrow-1}$. So, there is an enough evidence to reject the claim that the preference for Instagram or Snapchat isn't independent from class.
+
+### Problem 6
+
+**(a)**
+
+```{r}
+table.6 <- table(Cereals$Age, Cereals$Shelf)
+knitr::kable(table.6, caption = "Contingency Table of Age and Shelf Location")
+```
+
+**(b)**
+
+$$
+H_{0}: age\ of\ taget\ customers\ and\ the\ placement\ of\ cereals\ on\ the\ shelf\ are\ independent.
+$$
+$$
+H_{\alpha}: age\ of\ taget\ customers\ and\ the\ placement\ of\ cereals\ on\ the\ shelf\ are\ not\ independent.
+$$
+
+```{r, warning=FALSE}
+p.6 <- chisq.test(table.6)$p.value
+```
+
+The p-value of R's `chisq.test` is $6.083\cdot10^{-7}$, suggesting that there is a significant evidence to reject the claim that the age pf target customers and the placement of cereals on shelf are independent. 
+
+**(c)**
+
+```{r}
+expect.6 <- outer(rowSums(table.6), colSums(table.6)) / sum(table.6)
+knitr::kable(expect.6, caption = "Expected Counts of the age and shelf locations")
+```
+
+The expected count of (adult, bottom) cell is less than 5. Also, the expected counts of (children, bottom) and (adult, top) is close to 5. In that Cochrane recommends 20% of the entire cells, which is 1.2 cells, have expected counts $\geq 5$ for $C\sim\chi^{2}_{df = ncol-1\cdot nrow-1}$ to work, `chisq.test` may not be an accurate approximation. 
+
+**(d)**
+
+```{r}
+perm.6 <- chisq.test(table.6, simulate.p.value = TRUE, B = 10^5-1)$p.value
+```
+
+The p-value of permuation test is $1\cdot10^{-5}$, suggesting that there is a significant evidence to reject the claim that the age pf target customers and the placement of cereals on shelf are independent. 
+
+### Problem 9
+
+**(a)**
+
+```{r}
+prop.table.9 <- prop.table(table(FlightDelays$Carrier, FlightDelays$Delayed30), 1)
+knitr::kable(prop.table.9, caption = "Contingency Table of Carrier and Delayed More than 30 Minutes")
+```
+
+This is the test of homogeneity.
+
+**(b)**
+
+$$
+H_{0}: \pi_{AA,\ delay30} = \pi_{UA,\ delay30},\ \pi_{AA,\ not\ delay30} = \pi_{UA,\ not\ delay30};
+$$
+$$
+H_{\alpha}: at\ least\ one\ of\ the\ equalities\ do\ not\ hold.
+$$
+```{r}
+table.9 <- table(FlightDelays$Carrier, FlightDelays$Delayed30)
+p.9 <- chisq.test(table.9)$p.value
+perm.9 <- chisq.test(table.9, simulate.p.value = TRUE, B = 10^5-1)$p.value
+```
+
+The p-value for $\chi^{2}$ test with df = 1 is 0.0002434374, suggesting that there is a significant evidence to reject the claim that the difference in the proportion of delays longer than 30 minutes between the two airlines is statistically significant.
+
+### Problem 13
+
+**(a)** If we multiply k on every entry,
+\
+$C_k = \sum\dfrac{(k\cdot observed - k\cdot expected)^2}{k\cdot expected} = k\cdot \sum\dfrac{(observed - expected)^2}{expected} = k\cdot C_{original}$.
+\
+In that every cell is multiplied by k, the marginal probabilities will not change. Also, as the number of columns and rows remain the same before and after the multiplication, degrees of freedom also remains the same.
+
+**(b)** The $P(\chi^2 > C)$ > $P(\chi^2 > kC)$ if k > 1. In other words, the p-value we got from the test will be smaller by the multiplication, providing more support to reject the null hypothesis compared to the original statistic.
+
+### Problem 15
+
+$p_1 = P(0 < y \leq 1.25) = \int_{0}^{1.25}(1/9)y^2dy = (1/27)y^3|_{0}^{1.25}$ = 0.072338
+\
+$p_2 = P(1.25 < y \leq 1.75) = \int_{1.25}^{1.75}(1/9)y^2dy = (1/27)y^3|_{1.25}^{1.75}$ = 0.126157
+\
+$p_3 = P(1.75 < y \leq 2.25) = \int_{1.75}^{2.25}(1/9)y^2dy = (1/27)y^3|_{1.75}^{2.25}$ = 0.22338
+\
+$p_4 = P(2.25 < y \leq 2.75) = \int_{2.25}^{2.75}(1/9)y^2dy = (1/27)y^3|_{2.25}^{2.75}$ = 0.34838
+\
+$p_5 = P(2.75 < y \leq 3) = \int_{2.75}^{3}(1/9)y^2dy = (1/27)y^3|_{2.75}^{3}$ = 0.229745
+
+$$
+H_{0}:The\ data\ are\ from\ pdf\ f(y)=(1/9)y^2
+$$
+$$
+H_{\alpha}: The\ data\ are\ not\ from\ pdf\ f(y)=(1/9)y^2
+$$
+
+```{r}
+observed.15 <- c(2,6,10,32,25)
+expect.15 <- 75*c(0.072338, 0.126157, 0.22338, 0.34838, 0.229745)
+table.15 <- rbind(observed.15,expect.15)
+colnames(table.15) <- c("(0, 1.25]", "(1.25, 1.75]", "(1.75, 2.25]", "(2.25, 2.75]", "[2.75, 3]")
+row.names(table.15) <- c("observed","expect")
+knitr::kable(table.15, caption = "Goodness of fit Table")
+
+c.15 <- sum((table.15[1,1:5]-table.15[2,1:5])^2/table.15[2,1:5])
+
+p.15 <- pchisq(c.15,4, lower.tail = FALSE)
+```
+
+The p-value for goodness of fit test is `r round(p.15, digits = 4)`, suggesting that there is an enough evidence to reject the claim that the data are from pdf $f(y)=(1/9)y^2$
+
+### Problem 17
+
+**(a)**
+
+$$
+H_{0}:The\ data\ are\ from\ N(25,10^2)
+$$
+$$
+H_{\alpha}:The\ data\ are\ not\ from\ N(25,10^2)
+$$
+
+```{r, tidy=TRUE}
+data.17 <- c(16.21,16.96, 17.07, 17.81, 19.66, 21.16, 21.95, 22.76, 23.81, 23.94,
+24.12, 24.26, 25.10, 25.15, 25.22, 25.47, 25.62, 25.91, 27.34, 27.51,
+28.05, 28.67, 28.76, 28.89, 28.93, 29.45, 29.54, 29.64, 30.38, 30.60,
+31.49, 31.52, 32.25, 32.26, 32.40, 32.52, 32.54, 32.66, 33.01, 33.02,
+33.91, 34.32, 34.83, 34.88, 34.93, 35.05, 35.33, 35.84, 36.18, 36.33,
+37.27, 37.84, 38.24, 38.33, 38.42, 38.74, 38.83, 40.87, 41.77, 43.91)
+
+quantiles.17 <- qnorm(c(.2, .4, .6, .8),25,10)
+obs.1 <- sum(data.17 <= quantiles.17[1])
+obs.2 <- sum(quantiles.17[1] < data.17 & data.17 <= quantiles.17[2])
+obs.3 <- sum(quantiles.17[2] < data.17 & data.17 <= quantiles.17[3])
+obs.4 <- sum(quantiles.17[3] < data.17 & data.17 <= quantiles.17[4])
+obs.5 <- sum(data.17 > quantiles.17[4])
+
+observed.17 <- c(obs.1,obs.2,obs.3,obs.4,obs.5)
+expect.17 <- c(12,12,12,12,12)
+table.17 <- rbind(observed.17,expect.17)
+
+colnames(table.17) <- c("(-Inf, 16.5838]", "(16.5838, 22.4665]", "(22.4665, 27.5335]", "(27.5335, 33.4162]", "(33.4162, +Inf]")
+row.names(table.17) <- c("observed","expect")
+knitr::kable(table.17, caption = "Goodness of fit Table")
+
+c.17 <- sum((table.17[1,1:5]-table.17[2,1:5])^2/table.17[2,1:5])
+p.17 <- pchisq(c.17,4, lower.tail = FALSE)
+```
+
+The p-value for goodness of fit test is $8.625969\cdot10^{-5}$, suggesting that there is an enough evidence to reject the claim that the data are from pdf $N(25,10^2)$.
+
+**(b)**
+
+$$
+H_{0}:The\ data\ are\ from\ N(30.324,6.54^2)
+$$
+$$
+H_{\alpha}:The\ data\ are\ not\ from\ N(30.324,6.54^2)
+$$
+
+```{r, tidy=TRUE}
+quantiles.17.2 <- qnorm(c(.2, .4, .6, .8),30.324,6.54)
+obs.1.2 <- sum(data.17 <= quantiles.17.2[1])
+obs.2.2 <- sum(quantiles.17.2[1] < data.17 & data.17 <= quantiles.17.2[2])
+obs.3.2 <- sum(quantiles.17.2[2] < data.17 & data.17 <= quantiles.17.2[3])
+obs.4.2 <- sum(quantiles.17.2[3] < data.17 & data.17 <= quantiles.17.2[4])
+obs.5.2 <- sum(data.17 > quantiles.17.2[4])
+
+observed.17.2 <- c(obs.1.2,obs.2.2,obs.3.2,obs.4.2,obs.5.2)
+table.17.2 <- rbind(observed.17.2,expect.17)
+
+colnames(table.17.2) <- c("(-Inf, 24.8198]", "(24.8198, 28.6671]", "(28.6671, 31.9809]", "(31.9809, 35.8282]", "(35.8282, +Inf]")
+row.names(table.17.2) <- c("observed","expect")
+knitr::kable(table.17.2, caption = "Goodness of fit Table")
+
+c.17.2 <- sum((table.17.2[1,1:5]-table.17.2[2,1:5])^2/table.17.2[2,1:5])
+p.17.2 <- pchisq(c.17.2,2, lower.tail = FALSE)
+```
+
+The degrees of freedom is 5 (number of cells) - 1 - 2 (number of parameters estimated) = 2. The p-value for goodness of fit test is `r round(p.17.2, digits = 4)`, suggesting that there is not an enough evidence to reject the claim that the data are from pdf $N(30.324,6.54^2)$.
+
+### Problem 20
+
+Since we don't know $\lambda$, we have to estimate it from taking an empirical average number of parasites per fish.
+
+```{r}
+lambda.20 <- (0*57+1*20+2*11+3*4+4*6+5*2+6*2)/102
+```
+
+We get $\hat{\lambda}$ = `r round(lambda.20, digits = 4)`. We use this esimate to get the expected number of fish from a theoretical model of Pois($\hat{\lambda}$). 
+
+$$
+H_{0}:The\ data\ are\ modeled\ by\ a\ Poisson\ distribution.
+$$
+$$
+H_{\alpha}:The\ data\ are\ not\ modeled\ by\ a\ Poisson\ distribution.
+$$
+
+```{r}
+obs.prop.20 <- c(57, 20, 11, 4, 6, 2, 2)
+expect.20 <- dpois(0:5, lambda.20)*102
+expect.20[7] <- ppois(5, lambda.20, lower.tail=FALSE)*102
+table.20 <- rbind(obs.prop.20, expect.20)
+
+colnames(table.20) <- c("0","1","2","3", "4","5","6")
+row.names(table.20) <- c("observed","expect")
+knitr::kable(table.20, caption = "Goodness of fit Table")
+
+c.20 <- sum((table.20[1,1:7]-table.20[2,1:7])^2/table.20[2,1:7])
+p.20 <- pchisq(c.20,5, lower.tail = FALSE)
+```
+
+The degrees of freedom is 7 (number of cells) - 1 - 1 (number of parameters estimated) = 5. The p-value for the goodness of fit test is $5.284\cdot 10^{-23}$, suggesting that there is an enough evidence to reject the claim that the data are modeled by a Poisson distribution.
+
+### Plus A
+
+**(i)** Lack of the observations. The author notes that the study needed 1800 patients based on the reported calculation, but the sample size is only 100. It contributes to low statistical power, and the low power leads to wider confidence interval. In other words, the observed difference, even if it is quite extreme, will not be enough to reject the null hypothesis.
+
+**(ii)** Article concludes that if we don't find any way to prove A causes B, then we should look for a way to rebut the causual relation between A and B. It somewhat coincides with "not guilty" finding in jury trial in that the court is looking for the evidences that the convict did not commit the crime. 
+
+### Plus B
+
+Tougher standard of proof sometimes throw out many legitimate findings. Also, the controled experiments are costly and unethical to conduct at all. For instnace, it is ethically inappropriate to take a controlled experiment on the correlation between smoking and cancer. 

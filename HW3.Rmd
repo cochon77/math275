@@ -1,0 +1,608 @@
+---
+title: "HW#3"
+author: "Colin Pi"
+date: '2019 1 21 '
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, out.width = "50%")
+library(resampledata)   #for textbook data sets
+library(gtools)
+library(dplyr)
+```
+
+##Chapter 4
+
+###Problem 6
+```{r}
+N <- 10^4
+phat.recid <- numeric(N)
+for (i in 1:N) {
+  samp <- sample(Recidivism$Recid, 25)
+  phat.recid[i] <- mean(samp == "Yes") # proportion yes
+}
+```
+**(a)**
+
+```{r, fig.align='center'}
+hist(phat.recid, xlab = "Means of Proportions", 
+     main = "Sampling Distribution of Means of Recidivism Proportion")
+```
+
+The distribution is slightly skewed to the left, with mean of `r mean(phat.recid)` and standard error of `r sd(phat.recid)`
+
+**(b)**
+
+Theoretical SE = $\tfrac{\sigma_{Recid}}{\sqrt{25}}$ = `r (sd(Recidivism$Recid == "Yes"))/5` $\approx$ $SE_{\hat{p}}$ = `r sd(phat.recid)`
+
+**(c)**
+
+```{r}
+phat.recid2 <- numeric(N)
+for (i in 1:N) {
+  samp <- sample(Recidivism$Recid, 250)
+  phat.recid2[i] <- mean(samp == "Yes") # proportion yes
+}
+```
+
+```{r, fig.align='center'}
+hist(phat.recid2, xlab = "Means of Proportions", 
+     main = "Sampling Distribution of Means of Recidivism Proportion")
+```
+
+Compared to the sample distribution with n = 25, the sample distribution with n = 250 is more normally distributed with less spread. 
+
+$\bar{\hat{p}}$ = `r mean(phat.recid2)`
+\
+$SE_{\hat{p}}$ = `r sd(phat.recid2)`
+\
+Theoretical SE = $\tfrac{\sigma_{Recid}}{\sqrt{250}}$ = `r (sd(Recidivism$Recid == "Yes"))/sqrt(250)` $\approx$ $SE_{\hat{p}}$ = `r sd(phat.recid2)`
+
+###Problem 9
+```{r, echo=FALSE}
+pdf.9 <- function(x){
+  3/8*(x^2)
+}
+prop.9 <- integrate(pdf.9, 0,1/5)
+```
+
+$\textit{P(0<Y<1/5)}$ = $\int_{0}^{1/5}\frac{3}{8}y^2dy$ = `r prop.9$value`
+
+###Problem 11
+Let $\sum{X}$ = X, then X ~ Bin(36,0.55)
+\
+The sampling distribution then has mean of $n\cdot p$ = `r 0.55*36` with Standard Error = `r 36*0.55*0.45`
+\
+As $\hat{p}$ = 0.5, $n\cdot\hat{p}$ = `r 0.5*36`
+\
+With continuity assumption, let's get $P(\hat{p} < 18.5)$
+\
+$P(\hat{p} < 18.5) \approx \Phi(\tfrac{18.5-19.8}{\sqrt{8.91}})$ = `r pnorm(18.5,19.8,sqrt(0.55*0.45*36))`
+\
+Relative error = $\tfrac{P(\hat{p} < 18.5) - \sum_{k = 0}^{18}(0.55)^k(1-.0.55)^k}{\sum_{k = 0}^{18}(0.55)^k(1-.0.55)^k}$ = `r (pnorm(18.5,19.8,sqrt(0.55*0.45*36))- pbinom(18,36,0.55))/pbinom(18,36,0.55)`
+\
+Without continuity assumption, 
+\
+$P(\hat{p} < 18) \approx \Phi(\tfrac{18-19.8}{\sqrt{8.91}})$ = `r pnorm(18,19.8,sqrt(0.55*0.45*36))`
+\
+Relative error = $\tfrac{P(\hat{p} < 18) - \sum_{k = 0}^{18}(0.55)^k(1-.0.55)^k}{\sum_{k = 0}^{18}(0.55)^k(1-.0.55)^k}$ = `r (pnorm(18,19.8,sqrt(0.55*0.45*36))- pbinom(18,36,0.55))/pbinom(18,36,0.55)`
+
+###Problem 13
+```{r, echo=FALSE}
+pdf.13.mean <- function(x){
+  x*3/16*(x-4)^2
+}
+pdf.13.var <- function(x){
+  x^2*3/16*(x-4)^2
+}
+```
+
+E[X] = $\int_{2}^{6}x\frac{3}{16}(x-4)^2dx$ = `r integrate(pdf.13.mean, 2,6)$value`
+\
+Var[X] = $E[X^2]-E[X]^2$ = $\int_{2}^{6}x^2\frac{3}{16}(x-4)^2dx$ - $E[X]^2$ = `r integrate(pdf.13.var,2,6)$value - (integrate(pdf.13.mean, 2,6)$value)^2`
+\
+So, the sampling distribution of $\bar{X}$ ~ N($E[X], \frac{Var[X]}{244}$)
+\
+$P(\hat{\bar{X}} \geq 4.2) \approx 1-\Phi(\tfrac{4.2-4}{\sqrt{2.4/244}})$ = `r pnorm(4.2,4,sqrt(2.4/244), lower.tail=FALSE)`
+
+\newpage
+
+###Problem 17
+**(a)**
+
+If X, Y are both normal
+$$
+aX + bY \sim  N(a\mu_{X}+b\mu_{Y},a^2\sigma^2_{X} + b^2\sigma^2_{Y})
+$$
+So W = X - 2Y ~ N(15-8, $3^2+(2\cdot2)^2$)
+
+**(b)**
+
+```{r, fig.align='center'}
+X.17 <- rnorm(10^4,15,3)
+Y.17 <- rnorm(10^4,4,2)
+W.17 <- X.17 - 2*Y.17
+
+hist(W.17, main="Sampling Distribution of W", xlab="W")
+mean.17 <- mean(W.17)
+sd.17 <- sd(W.17)
+```
+
+Theoretical Mean: 7
+\
+Simulated Mean: `r mean.17`
+\
+Theoretical SE: `r sqrt(3^2 + 4^2)`
+\
+Simulated SE: `r sd.17`
+
+**(c)**
+```{r}
+prop.17 <- mean(W.17<=10)
+prop.17.exact <- pnorm(10,7,5)
+```
+
+$P(W\leq10)_{sim}$ = `r prop.17`
+\
+$P(W\leq10)_{exact}$ = `r prop.17.exact`
+
+###Problem 18
+**(a)**
+If X, Y, U are all Poison Distributions,
+$$
+X + Y + U \sim  Pois(\mu_{X}+\mu_{Y}+\mu_{U})
+$$
+So W = X + Y + U ~ Pois(4+12+3) = Pois(19), with both mean and variance of 19.  
+
+\newpage
+
+**(b)**
+```{r, fig.align='center'}
+X.18 <- rpois(10^4,4)
+Y.18 <- rpois(10^4,12)
+U.18 <- rpois(10^4,3)
+W.18 <- X.18 + Y.18 + U.18
+
+hist(W.18, main="Sampling Distribution of W", xlab="W")
+mean.18 <- mean(W.18)
+sd.18 <- sd(W.18)
+```
+
+Theoretical Mean: 19
+\
+Simulated Mean: `r mean.18`
+\
+Theoretical SE: `r sqrt(19)`
+\
+Simulated SE: `r sd.18`
+
+**(c)**
+```{r}
+prop.18 <- mean(W.18<=14)
+prop.18.exact <- ppois(14,19)
+```
+
+$P(W\leq14)_{sim}$ = `r prop.18`
+\
+$P(W\leq14)_{exact}$ = `r prop.18.exact`
+
+###Problem 19
+**(a)**
+
+Based on CLT, $\bar{X}$ ~ N(20,$\tfrac{8^2}{10}$), $\bar{Y}$ ~ N(16,$\tfrac{7^2}{15}$). 
+\
+W ~ N(36,$\tfrac{8^2}{10}+\tfrac{7^2}{15}$)
+
+**(b)**
+```{r, fig.align='center'}
+W.19 <- numeric(1000)
+for (i in 1:1000) {
+  x <- rnorm(10, 20, 8)
+  y <- rnorm(15, 16, 7)
+  W.19[i] <- mean(x) + mean(y)
+}
+hist(W.19, main="Sampling Distribution of W", xlab = "W")
+mean.19 <- mean(W.19)
+sd.19 <- sd(W.19)
+```
+
+Theoretical Mean: 36
+\
+Simulated Mean: `r mean.19`
+\
+Theoretical SE: `r sqrt(8^2/10+7^2/15)`
+\
+Simulated SE: `r sd.19`
+
+```{r}
+prop.19 <- mean(W.19 < 40)
+prop.19.exact <- pnorm(40,36,sqrt(8^2/10+7^2/15))
+```
+
+$P(W<40)_{sim}$ = `r prop.19`
+\
+$P(W<40)_{exact}$ = `r prop.19.exact`
+
+###Problem 21
+
+```{r, fig.align='center'}
+W.21.1 <- numeric(10^4)
+for(i in 1:10^4){
+  x <- rnorm(2,0,1)
+  W.21.1[i] <- sum(x^2)
+}
+hist(W.21.1, main = "Sampling Distribution of W (n=2)", xlab = "W")
+```
+
+The distribution is heavily skewed to the right. The mean is `r mean(W.21.1)` and variance is `r var(W.21.1)`.
+
+```{r, fig.align='center'}
+W.21.2 <- numeric(10^4)
+for(i in 1:10^4){
+  x <- rnorm(4,0,1)
+  W.21.2[i] <- sum(x^2)
+}
+hist(W.21.2, main = "Sampling Distribution of W (n=4)", xlab = "W")
+```
+
+The distribution gets less skewed compared to n=2, but it is still skewed to the left. The mean is `r mean(W.21.2)` and variance is `r var(W.21.2)`.
+
+```{r, fig.align='center'}
+W.21.3 <- numeric(10^4)
+for(i in 1:10^4){
+  x <- rnorm(5,0,1)
+  W.21.3[i] <- sum(x^2)
+}
+hist(W.21.3, main = "Sampling Distribution of W (n=5)", xlab = "W")
+```
+
+Compared to the distributions above, the distribution of W becomes closer to normal. The mean is `r mean(W.21.3)` and variance is `r var(W.21.3)`.
+\
+We can observe a pattern that the sampling distribution of W has mean $\approx$ n and variance $\approx$ 2 $\cdot$ n.
+
+###Problem 22
+**(a)**
+\
+If X and Y are independent,
+\
+mean(X+Y) = E(X) + E(Y) = $\frac{40+60}{2}+\frac{45+80}{2}$ = 112.5
+\
+var(X+Y) = Var(X) + Var(Y) = $\frac{(40-60)^2}{12}+\frac{(45-80)^2}{12}$ = 135.4167
+
+\newpage
+
+**(b)**
+```{r, fig.align='center'}
+X.22 <- runif(1000, 40, 60)
+Y.22 <- runif(1000, 45, 80)
+total <- X.22 + Y.22
+hist(total, main="Sampling Distribution of X+Y", xlab = "X+Y")
+mean.22 <- mean(total)
+var.22 <- var(total)
+```
+
+The distribution is rougly normal, with a large variance. 
+\
+Theoretical Mean: 112.5
+\
+Simulated Mean: `r mean.22`
+\
+Theoretical Variance: 135.4167
+\
+Simulated Variance: `r var.22`
+
+**(c)**
+
+```{r}
+prop.22 <- mean(total < 90)
+```
+
+P(total < 90) = `r prop.22`.
+
+###Problem 27
+**(a)**
+\
+$F(t)=\int_{1}^{t}\frac{2}{x^2}dx$ = 2-2/t
+\
+$F(t)_{max} = F(t) \cdot F(t)$
+\
+$f(t)_{max} = 2 \cdot F(t)^{2-1} \cdot f(t) = 2 \cdot (2-2/t) \cdot (2/t^2)$
+\
+$=4(2-\frac{2}{t})/t^2$, $1 \leq t \leq 2$
+
+**(b)** 
+
+```{r, echo=FALSE}
+pdf.27 <- function(t){
+  t*2*(2-2/t)*(2/t^2)
+}
+exp.27 <- integrate(pdf.27, 1,2)
+```
+
+$\int_{1}^{2}4(2-\frac{2}{t})/tdt$ = `r exp.27$value`
+
+###Problem 28
+**(a)**
+\
+$F(t)=\int_{0}^{t}3x^2dx = t^3$
+\
+$f(t)_{min} = n \cdot (1 - F((t))) \cdot f(t) = n \cdot (1-t^3)^{n-1} \cdot 3t^2$
+
+**(b)**
+\
+$F(t)=\int_{0}^{t}3x^2dx = t^3$
+\
+$F(t)_{max} = F(t)^n$
+\
+$f(t)_{max} = n \cdot F(t)^{n-1} \cdot f(t) = n \cdot (t^3)^{n-1} \cdot 3t^2$
+
+**(c)**
+\
+$f(t)_{max} = 10 \cdot (t^3)^{9} \cdot 3t^2 = 30t^{29}$
+
+```{r, echo=FALSE}
+pdf.28 <- function(x) {
+  30*x^29
+}
+```
+
+$P(t>0.92) = \int_{0.92}^{1}30t^{29}dt$ = `r integrate(pdf.28,0.92,1)$value`
+
+###Problem 29
+
+$f(x) = 12e^{-12x}, \space x \geq 0$
+\
+$F(t) = \int_{0}^{t}12e^{-12x}dx = 1-e^{-12t}$
+\
+$F(t)_{max} = F(t)^n = (1-e^{-12t})^{10}$
+\
+$f(t)_{max} = n \cdot F(t)^{n-1} \cdot f(t) = 10 \cdot (1-e^{-12 t})^{9} \cdot 12 e^{-12t}$
+
+##Chapter 5
+
+###Problem 2
+```{r, tidy=TRUE}
+sample.2 <- c(1,3,4,6)
+boot.2 <- permutations(4, 4, v=sample.2, set=TRUE, repeats.allowed=TRUE) ##gtools package
+```
+
+**(a)**
+```{r}
+mean.func <- function(i){
+  return (mean(boot.2[i,]))
+}
+mean.2.a <- lapply(1:256, mean.func) %>% unlist
+prop.2.a <- mean(mean.2.a == 1)
+```
+P($\bar{X}$ = 1) = `r prop.2.a`
+
+**(b)**
+```{r}
+max.func <- function(i){
+  return (max(boot.2[i,]))
+}
+max.2.b <- lapply(1:256, max.func) %>% unlist
+prop.2.b <- mean(max.2.b == 6)
+```
+P(max(X) = 6) = `r prop.2.b`
+
+**(c)**
+```{r}
+ifelse.func <- function(i){
+  less.2 <- ifelse(mean(boot.2[i,] < 2) == 1/2, 1, 0)
+  return (less.2)
+}
+ifelse.2.c <- lapply(1:256, ifelse.func) %>% unlist
+prop.2.c <- mean(as.numeric(ifelse.2.c))
+```
+P((X<2) = 2) = `r prop.2.c`
+
+\newpage
+
+###Problem 3
+
+**(a)**
+```{r, tidy=TRUE}
+sample.3 <- c(1:3)
+boot.3.ordered <- permutations(3, 3, v=sample.3, set=TRUE, repeats.allowed=TRUE)
+colnames(boot.3.ordered) = c("X1","X2","X3")
+knitr::kable(boot.3.ordered)
+```
+
+There are `r nrow(boot.3.ordered)` ordered bootstrap samples.
+
+\newpage
+
+**(b)**
+```{r, tidy=TRUE}
+boot.3.unordered <- combinations(3, 3, v=sample.3, set=TRUE, repeats.allowed=TRUE)
+colnames(boot.3.unordered) = c("X1","X2","X3")
+knitr::kable(boot.3.unordered)
+```
+
+There are `r nrow(boot.3.unordered)` unordered bootstrap samples.
+
+**(c)**
+\
+Bootstrap samples have one occurrence of 1 and two occurrences of 3: (1,3,3), (3,1,3), (3,3,1). (Three samples) 
+\
+Bootstrap samples that have each of 1, 2, and 3 occurring exactly once: 
+(1,2,3), (1,3,2), (2,1,3), (2,3,1), (3,1,2), (3,2,1). (Six samples)
+\
+They are not the same number.
+
+**(d)**
+\
+P(Bootstrap samples have one occurrence of 1 and two occurrences of 3) = 3/27
+\
+P(Bootstrap samples that have each of 1, 2, and 3 occurring exactly once) = 6/27
+\
+They are not equal.
+
+###Problem 8
+
+**(a)**
+\
+Mean($\bar{X}$) = 36
+\
+SE($\bar{X}$) = $\frac{\sigma}{\sqrt{n}}$ = $\tfrac{8}{\sqrt{200}}$ = `r 8/sqrt(200)`
+\
+The sample distribution is normally distributed.
+
+**(b)**
+```{r, tidy=TRUE, fig.align='center'}
+set.seed(8)
+sample.8 <- rnorm(200,36,8)
+hist(sample.8, main="Distribution of the samples (n=200)", xlab = "X")
+```
+
+Mean($X$) = `r round(mean(sample.8), digits=4)`
+\
+SE($X$) = `r round(sd(sample.8), digits=4)`
+\
+The sample is roughly normally distributed.
+
+**(c)**
+```{r, fig.align='center'}
+N <- 10^5
+boot.8 <- numeric(N)
+for (i in 1:N) {
+  x <- sample(sample.8, 200, replace = TRUE)
+  boot.8[i] <- mean(x)
+  }
+hist(boot.8, main = "Bootstrap Distribution", xlab = "Xbar")
+mean.8 <- mean(boot.8)
+sd.8 <- sd(boot.8)
+```
+
+Bootstrap Mean = `r round(mean.8, digits=4)`
+\
+Bootstrap SE = `r round(sd.8, digits=4)`
+
+**(d)**
+```{r, tidy=TRUE}
+table.8 <- matrix(1:8, nrow = 4, ncol = 2, 
+                  dimnames = 
+                    list(c("Population","Sample Distribution of Xbar","Sample","Bootstrap Distribution"), 
+                         c("Mean","Standard Deviation")))
+table.8[,1] = c(36,36,round(mean(sample.8), digits=4),round(mean.8, digits=4))
+table.8[,2] = c(8,round(8/sqrt(200), digits=4),round(sd(sample.8), digits=4), round(sd.8, digits=4))
+knitr::kable(table.8)
+```
+
+**(e)**
+
+####n = 50
+```{r, tidy=TRUE, fig.align='center'}
+set.seed(700)
+sample.8.50 <- rnorm(50,36,8)
+hist(sample.8.50, main="Distribution of the samples (n=50)", xlab = "X")
+```
+
+Mean($X$) = `r round(mean(sample.8.50), digits=4)`
+\
+SE($X$) = `r round(sd(sample.8.50), digits=4)`
+\
+The sample is roughly normally distributed.
+
+```{r, fig.align='center'}
+boot.8.50 <- numeric(N)
+for (i in 1:N) {
+  x <- sample(sample.8.50, 50, replace = TRUE)
+  boot.8.50[i] <- mean(x)
+  }
+hist(boot.8.50, main = "Bootstrap Distribution", xlab = "Xbar")
+mean.8.50 <- mean(boot.8.50)
+sd.8.50 <- sd(boot.8.50)
+```
+
+Bootstrap Mean = `r round(mean.8.50, digits=4)`
+\
+Bootstrap SE = `r round(sd.8.50, digits=4)`
+
+```{r, tidy=TRUE}
+table.8.50 <- matrix(1:8, nrow = 4, ncol = 2, 
+                  dimnames = 
+                    list(c("Population","Sample Distribution of Xbar","Sample","Bootstrap Distribution"), 
+                         c("Mean","Standard Deviation")))
+table.8.50[,1] = c(36,36,round(mean(sample.8.50), digits=4),round(mean.8.50, digits=4))
+table.8.50[,2] = c(8,round(8/sqrt(50), digits=4),round(sd(sample.8.50), digits=4), round(sd.8.50, digits=4))
+knitr::kable(table.8.50)
+```
+
+####n = 10
+```{r, tidy=TRUE, fig.align='center'}
+set.seed(800)
+sample.8.10 <- rnorm(10,36,8)
+hist(sample.8.10, main="Distribution of the samples (n=10)", xlab = "X")
+```
+
+Mean($X$) = `r round(mean(sample.8.10), digits=4)`
+\
+SE($X$) = `r round(sd(sample.8.10), digits=4)`
+\
+The sample is roughly normally distributed.
+
+```{r, fig.align='center'}
+boot.8.10 <- numeric(N)
+for (i in 1:N) {
+  x <- sample(sample.8.10, 10, replace = TRUE)
+  boot.8.10[i] <- mean(x)
+  }
+hist(boot.8.10, main = "Bootstrap Distribution", xlab = "Xbar")
+mean.8.10 <- mean(boot.8.10)
+sd.8.10 <- sd(boot.8.10)
+```
+
+Bootstrap Mean = `r round(mean.8.10, digits=4)`
+\
+Bootstrap SE = `r round(sd.8.10, digits=4)`
+
+```{r, tidy=TRUE}
+table.8.10 <- matrix(1:8, nrow = 4, ncol = 2, 
+                  dimnames = 
+                    list(c("Population","Sample Distribution of Xbar","Sample","Bootstrap Distribution"), 
+                         c("Mean","Standard Deviation")))
+table.8.10[,1] = c(36,36,round(mean(sample.8.10), digits=4),round(mean.8.10, digits=4))
+table.8.10[,2] = c(8,round(8/sqrt(10), digits=4),round(sd(sample.8.10), digits=4), round(sd.8.10, digits=4))
+knitr::kable(table.8.10)
+```
+
+###A
+Refer #4.11
+
+###B
+1. $\sum X_{i} \sim Gamma(n,\lambda)$. According to B.9.3., $\bar{X} = \tfrac{1}{n} \sum X_{i} \sim Gamma(n,n\lambda)$. So the sample distribution of $\bar{X}$ is $Gamma(n,\lambda/n)$ 
+
+2. 
+
+```{r, fig.align='center', tidy=TRUE}
+N <- 10^5
+Xbar.B <- numeric(N)
+for (i in 1:N){
+x <- rexp(25, 1/7)
+Xbar.B[i] <- mean(x)
+}
+mean.B <- mean(Xbar.B) #check with theoretical
+mean.B.theo <- (25/(1/7*25))
+sd.B <- sd(Xbar.B)
+sd.B.theo <- sqrt(25)/(25/7)
+```
+
+Mean of the sampling distribution = `r mean.B`
+\
+Mean of the theoretical distribution = `r mean.B.theo`
+\
+Standard error of the sampling distribution = `r sd.B`
+\
+Standard error of the theoretical distribution = `r sd.B.theo`
+
+
+```{r, fig.align='center'}
+hist(Xbar.B, prob = TRUE, main = "Sampling distribution of mean", xlab ="xbar")
+x <- seq(0, 15, length = 200)
+y <- dgamma(x, 25, 25*1/7) #plug in theoretical R, lambda for Xbar
+lines(x, y, lty = 2, col = "red") #add density to histogram
+```
+

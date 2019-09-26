@@ -1,0 +1,407 @@
+---
+title: "HW6"
+author: "Colin Pi"
+date: '2019 2 13 '
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, out.width = "60%")
+library(resampledata)
+```
+
+### Problem 1
+
+**(a)** Confidence interval is not about the chance (probabilty) that the true mean lies between the lower and upper bounds of the interval (the probability that the true mean is in the interval is 0,1). 
+\
+**(b)** This is the right interpretation. 
+\
+**(c)** 95% of time that confidence intervals constructed by each sample will contain the true mean, not the mean will lie in between this interval 95% of time. 
+\
+**(d)** This is the right interpretation.
+\
+**(e)** In 95% of confidence interval constructed by each sample (not 95% of samples).
+
+### Problem 3
+
+**(a)**
+\
+Assuming that population is normally distributed ($\sim N(\mu, \sigma^2)$), 
+\
+$\bar{x} \sim N(\mu, \dfrac{50^2}{100})$
+\
+$Z = \dfrac{\bar{x}-\mu}{{50}/{10}} \sim N(0,1)$
+\
+$0.9 = P(-1.64 < \dfrac{\bar{x}-\mu}{{50}/{10}} < 1.64) = P(\bar{x} - 1.64\cdot5 < \mu < \bar{x} + 1.64\cdot5)$
+\
+So 90% confidence interval is ($210-1.64 \cdot 5, 210+1.64 \cdot 5$) = (`r round(210+qnorm(0.05)*5, digits = 3)`, `r round(210+qnorm(0.95)*5, digits = 3)`)
+
+**(b)**
+ME = $1.96\cdot50/\sqrt{n}$ < 10
+\
+If you solve for n, n > 9.8 = `r ceiling((5*qnorm(0.975))^2)`
+
+**(c)**
+ME = $2.58\cdot50/\sqrt{n}$ < 10
+\
+If you solve for n, n >  = `r round((5*qnorm(0.995))^2)`
+
+
+### Problem 5
+
+$ME_{n} = 2\cdot1.96\cdot(\sigma/\sqrt{n})$
+\
+To make $ME_{m} = 1/2\cdot ME_{n} = 2\cdot1.96\cdot(\sigma/\sqrt{4n})$. So, m should be 4n.
+
+\newpage
+
+### Problem 9
+
+**(a)**
+
+```{r, fig.align='center'}
+hist(FlightDelays$Delay, main = "Histogram of Delay Times", xlab = "Delay Time (minutes)")
+abline(v = mean(FlightDelays$Delay), col = "red", lty = 2)
+```
+
+The distribution is heavily skewed to the right. The mean of the Delay Time is `r round(mean(FlightDelays$Delay), digits = 3)` minutes. 
+
+**(b)**
+
+```{r, fig.align='center', tidy=TRUE}
+mu <- mean(FlightDelays$Delay)
+counter <- 0
+plot(c(-20, 100), c(1,100), type = "n", xlab = "Confidence Interval", 
+     ylab = "First 100 Intervals")
+for (i in 1:1000){
+  x <- sample(FlightDelays$Delay, 30, replace = FALSE)
+  L <- t.test(x)$conf.int[1]
+  U <- t.test(x)$conf.int[2]
+  if (L < mu && mu < U) counter <- counter + 1
+  if (i <= 100) segments(L, i, U, i)
+}
+abline(v = mu, col = "red") 
+capture.b <- counter/1000
+```
+
+Only `r capture.b*100`% of confidence interval capture the true mean.
+
+**(c)** The confidence intervals with short length may be constructed from the samples within a small range (small sample standard error), whereas the intervals with longer length may be constructed from the samples distant to each other (large sample standard error).
+
+### Problem 11
+
+**(a)**
+
+```{r, fig.align='center'}
+hist(Spruce$Ht.change, main = "Histogram of Height Change", xlab = "Change in Height")
+```
+
+The distribution is roughly normally distributed (slightly heavier right tail).
+
+**(b)**
+
+```{r}
+n.11 <- nrow(Spruce)
+q.11 <- qt(c(0.025,0.975), n.11-1)
+se.11 <- sd(Spruce$Ht.change)/sqrt(n.11)
+```
+
+$\bar{x}$ = `r round(mean(Spruce$Ht.change), digits = 3)`, SE = $\dfrac{S}{\sqrt{n}}$ = `r se.11`
+\
+95% confidence interval: ($\bar{x} + qt_{0.025,df} \cdot SE$, $\bar{x} + qt_{0.975,df} \cdot SE$) = (`r round(mean(Spruce$Ht.change)+q.11[1]*se.11, digits = 3)`, `r round(mean(Spruce$Ht.change)+q.11[2]*se.11, digits =3)`)
+\
+We are 95% confident that the mean height change over the 5-year period is from `r round(mean(Spruce$Ht.change)+q.11[1]*se.11, digits = 3)` to `r round(mean(Spruce$Ht.change)+q.11[2]*se.11, digits =3)` cm.
+
+### Problem 13
+
+**(a)**
+
+```{r, fig.align='center'}
+wy <- subset(Girls2004, select = Weight, subset = State == "WY", drop = T)
+ak <- subset(Girls2004, select = Weight, subset = State == "AK", drop = T)
+par(mfrow=c(1,2))
+hist(wy, main = "Wyoming", xlab = "Weight")
+hist(ak, main = "Alaska", xlab = "Weight")
+par(mfrow=c(1,1))
+```
+
+Disbribution of baby girls' weights in Wyoming is a slightly skewed to left, so do in Alaska. \
+**(b)**
+
+```{r, tidy=TRUE}
+df.13 <- (var(wy)/length(wy)+var(ak)/length(ak))^2/((var(wy)/length(wy))^2/(length(wy)-1)+(var(ak)/length(ak))^2/(length(ak)-1))
+q.13 <- qt(c(0.025,0.975), df.13)
+se.13 <- sqrt(var(ak)/length(ak) + var(wy)/length(wy))
+```
+
+$\bar{x}_{AK} - \bar{x}_{WY}$ = `r round(mean(ak)-mean(wy), digits = 3)`, SE = $\sqrt{\dfrac{\sigma^2_{AK}}{n_{AK}}+\dfrac{\sigma^2_{WY}}{n_{WY}}}$ = `r round(se.13, digits=3)`, 
+\
+df = $\dfrac{(S^2_{AK}/n_{AK}+S^2_{WY}/n_{WY})^2}{(S^2_{AK}/n_{AK})^2/(n_{AK}-1) + (S^2_{WY}/n_{WY})^2/(n_{WY}-1)}$ = `r round(df.13, digits=3)`
+
+95% confidence interval: ($\bar{x}_{AK} - \bar{x}_{WY} + qt_{0.025,df} \cdot SE$, $\bar{x}_{AK} - \bar{x}_{WY} + qt_{0.975,df} \cdot SE$) = 
+(`r round(mean(ak)-mean(wy)+q.13[1]*se.13, digits = 3)`, 
+`r round(mean(ak)-mean(wy)+q.13[2]*se.13, digits = 3)`)
+
+We are 95% confidence that the difference in the average of baby girls' birthweight in Alaska and Wyoming is from `r round(mean(ak)-mean(wy)+q.13[1]*se.13, digits = 3)` to `r round(mean(ak)-mean(wy)+q.13[2]*se.13, digits = 3)` grams.
+
+### Problem 17
+
+**(a)**
+
+```{r, fig.align='center'}
+olympic.female <- subset(Olympics2012, select = Weight, subset = Sex == "F", drop = T)
+hist(olympic.female, main = "Histogram of Weight of Female Athletes", xlab = "Weight")
+```
+
+Distribution is skewed to the right. There is an outlier at the right side of the distribution (300-350). 
+
+**(b)**
+
+```{r}
+n.17 <- length(olympic.female)
+q.17 <- qt(c(0.025,0.975), n.17-1)
+se.17 <- sd(olympic.female)/sqrt(n.17)
+```
+
+$\bar{x}$ = `r round(mean(olympic.female), digits = 3)`, SE = $\dfrac{S}{\sqrt{n}}$ = `r se.17`
+\
+95% confidence interval: ($\bar{x} + qt_{0.025,df} \cdot SE$, $\bar{x} + qt_{0.975,df} \cdot SE$) = (`r round(mean(olympic.female)+q.17[1]*se.17, digits = 3)`, `r round(mean(olympic.female)+q.17[2]*se.17, digits =3)`)
+\
+We are 95% confident that the average weight of female atheletes is from `r round(mean(olympic.female)+q.17[1]*se.17, digits = 3)` to `r round(mean(olympic.female)+q.17[2]*se.17, digits =3)` pounds. 
+
+**(c)**
+
+```{r}
+outlier.17 <- sort(olympic.female)[length(olympic.female)]
+```
+
+The outlier is `r outlier.17`. 
+
+```{r}
+olympic.female.2 <- sort(olympic.female)[-length(olympic.female)]
+n.17.2 <- length(olympic.female.2)
+q.17.2 <- qt(c(0.025,0.975), n.17.2-1)
+se.17.2 <- sd(olympic.female.2)/sqrt(n.17.2)
+```
+
+$\bar{x}$ = `r round(mean(olympic.female.2), digits = 3)`, SE = $\dfrac{S}{\sqrt{n}}$ = `r se.17.2`
+\
+95% confidence interval: ($\bar{x} + qt_{0.025,df} \cdot SE$, $\bar{x} + qt_{0.975,df} \cdot SE$) = (`r round(mean(olympic.female.2)+q.17.2[1]*se.17.2, digits = 3)`, `r round(mean(olympic.female.2)+q.17.2[2]*se.17.2, digits =3)`)
+\
+We are 95% confident that the average weight of female atheletes is from `r round(mean(olympic.female.2)+q.17.2[1]*se.17.2, digits = 3)` to `r round(mean(olympic.female.2)+q.17.2[2]*se.17.2, digits =3)` pounds.
+\
+There is a substantial change in the upper bound. The upper bound decreased almost by 20, but the lower bound increased by only 1.5.
+
+### Problem 18
+
+**(a)**
+
+```{r, fig.align='center'}
+olympic.male <- subset(Olympics2012, select = Weight, subset = Sex == "M", drop = T)
+hist(olympic.male, main = "Histogram of Weight of Male Athletes", xlab = "Weight")
+```
+
+Distribution is skewed to the right. There is an outlier at the right side of the distribution (250-300). 
+
+**(b)**
+
+```{r, tidy=TRUE}
+df.18 <- (var(olympic.male)/length(olympic.male)+var(olympic.female)/length(olympic.female))^2/((var(olympic.male)/length(olympic.male))^2/(length(olympic.male)-1)+(var(olympic.female)/length(olympic.female))^2/(length(olympic.female)-1))
+q.18 <- qt(c(0.025,0.975), df.18)
+se.18 <- sqrt(var(olympic.male)/length(olympic.male) + var(olympic.female)/length(olympic.female))
+```
+
+$\bar{x}_{Male} - \bar{x}_{Female}$ = `r round(mean(olympic.male)-mean(olympic.female), digits = 3)`, SE = $\sqrt{\dfrac{\sigma^2_{Male}}{n_{Male}}+\dfrac{\sigma^2_{Female}}{n_{Female}}}$ = `r round(se.18, digits=3)`, 
+\
+df = $\dfrac{(S^2_{Male}/n_{Male}+S^2_{Female}/n_{Female})^2}{(S^2_{Male}/n_{Male})^2/(n_{Male}-1) + (S^2_{Female}/n_{Female})^2/(n_{Female}-1)}$ = `r round(df.18, digits=3)`
+\
+95% confidence interval: ($\bar{x}_{Male} - \bar{x}_{Female} + qt_{0.025,df} \cdot SE$, $\bar{x}_{Male} - \bar{x}_{Female} + qt_{0.975,df} \cdot SE$) = 
+\
+(`r round(mean(olympic.male)-mean(olympic.female)+q.18[1]*se.18, digits = 3)`, 
+`r round(mean(olympic.male)-mean(olympic.female)+q.18[2]*se.18, digits = 3)`)
+\
+We are 95% confident that the difference in the average fo weight between male and female atheletes is from `r round(mean(olympic.male)-mean(olympic.female)+q.18[1]*se.18, digits = 3)` to `r round(mean(olympic.male)-mean(olympic.female)+q.18[2]*se.18, digits = 3)` pounds. There is not an enough evidence that the mean weight of male atheletes is bigger than that of female athelets. 
+
+**(c)**
+
+```{r, tidy=TRUE}
+df.18.2 <- (var(olympic.male)/length(olympic.male)+var(olympic.female.2)/length(olympic.female.2))^2/((var(olympic.male)/length(olympic.male))^2/(length(olympic.male)-1)+(var(olympic.female.2)/length(olympic.female.2))^2/(length(olympic.female.2)-1))
+q.18.2 <- qt(c(0.025,0.975), df.18.2)
+se.18.2 <- sqrt(var(olympic.male)/length(olympic.male) + var(olympic.female.2)/length(olympic.female.2))
+```
+
+$\bar{x}_{Male} - \bar{x}_{Female}$ = `r round(mean(olympic.male)-mean(olympic.female.2), digits = 3)`, SE = $\sqrt{\dfrac{\sigma^2_{Male}}{n_{Male}}+\dfrac{\sigma^2_{Female}}{n_{Female}}}$ = `r round(se.18.2, digits=3)`, 
+\
+df = $\dfrac{(S^2_{Male}/n_{Male}+S^2_{Female}/n_{Female})^2}{(S^2_{Male}/n_{Male})^2/(n_{Male}-1) + (S^2_{Female}/n_{Female})^2/(n_{Female}-1)}$ = `r round(df.18.2, digits=3)`
+\
+95% confidence interval: ($\bar{x}_{Male} - \bar{x}_{Female} + qt_{0.025,df} \cdot SE$, $\bar{x}_{Male} - \bar{x}_{Female} + qt_{0.975,df} \cdot SE$) = 
+\
+(`r round(mean(olympic.male)-mean(olympic.female.2)+q.18.2[1]*se.18.2, digits = 3)`, 
+`r round(mean(olympic.male)-mean(olympic.female.2)+q.18.2[2]*se.18.2, digits = 3)`)
+\
+We are 95% confident that the difference in the average fo weight between male and female atheletes is from `r round(mean(olympic.male)-mean(olympic.female.2)+q.18.2[1]*se.18.2, digits = 3)` to `r round(mean(olympic.male)-mean(olympic.female.2)+q.18.2[2]*se.18.2, digits = 3)` pounds. After omitting the outlier, we can find an enough evidence that the mean weight of male atheletes is bigger than that of female athelets. 
+
+###Problem 22
+
+```{r, tidy = TRUE}
+pooled.count <- 0 
+unpooled.count <- 0 
+m <- 20 # sample size
+n <- 10 # sample size
+N <- 10000
+for (i in 1:N) {
+  x <- rnorm(m, 8, 10) # Draw m from N(8,10^2)
+  y <- rnorm(n, 3, 15) # Draw n from N(3,15^2)
+  # Conf ints, with pooled and unpooled variance
+  CI.pooled <- t.test(x, y, var.equal = T)$conf
+  CI.unpooled <- t.test(x, y)$conf
+  # Is 5 in interval? If yes, increase counter.
+  if (CI.pooled[1] <= 5 && 5 <= CI.pooled[2]) pooled.count <- pooled.count + 1
+  if (CI.unpooled[1] <= 5 && 5 <= CI.unpooled[2]) unpooled.count <- unpooled.count + 1
+}
+perform.pooled <- pooled.count/N # Proportion of times
+perform.unpooled <- unpooled.count/N # CI covers 5
+```
+
+**(a)** Unpooled confidence intervals contains true difference in means more than pooled confidence intervals (Proportion of unpooled confidence interval that contains 5 = `r perform.unpooled` > Proportion of pooled confidence interval that contains 5 = `r perform.pooled`). So the performance of unpooled confidence intervals is better than that of the pooled confidence intervals. 
+
+**(b)**
+
+#####m = 80, n = 40
+
+```{r, tidy = TRUE}
+pooled.count <- 0 
+unpooled.count <- 0 
+m <- 80 # sample size
+n <- 40 # sample size
+N <- 10000
+for (i in 1:N) {
+  x <- rnorm(m, 8, 10) # Draw m from N(8,10^2)
+  y <- rnorm(n, 3, 15) # Draw n from N(3,15^2)
+  # Conf ints, with pooled and unpooled variance
+  CI.pooled <- t.test(x, y, var.equal = T)$conf
+  CI.unpooled <- t.test(x, y)$conf
+  # Is 5 in interval? If yes, increase counter.
+  if (CI.pooled[1] <= 5 && 5 <= CI.pooled[2]) pooled.count <- pooled.count + 1
+  if (CI.unpooled[1] <= 5 && 5 <= CI.unpooled[2]) unpooled.count <- unpooled.count + 1
+}
+perform.pooled.2 <- pooled.count/N # Proportion of times
+perform.unpooled.2 <- unpooled.count/N # CI covers 5
+```
+
+Unpooled confidence intervals contains true difference in means more than pooled confidence intervals (Proportion of unpooled confidence interval that contains 5 = `r perform.unpooled.2` > Proportion of pooled confidence interval that contains 5 = `r perform.pooled.2`). The result is almost similar to one we got in (a). 
+
+#####m = 120, n = 80
+
+```{r, tidy = TRUE}
+pooled.count <- 0 
+unpooled.count <- 0 
+m <- 120 # sample size
+n <- 80 # sample size
+N <- 10000
+for (i in 1:N) {
+  x <- rnorm(m, 8, 10) # Draw m from N(8,10^2)
+  y <- rnorm(n, 3, 15) # Draw n from N(3,15^2)
+  # Conf ints, with pooled and unpooled variance
+  CI.pooled <- t.test(x, y, var.equal = T)$conf
+  CI.unpooled <- t.test(x, y)$conf
+  # Is 5 in interval? If yes, increase counter.
+  if (CI.pooled[1] <= 5 && 5 <= CI.pooled[2]) pooled.count <- pooled.count + 1
+  if (CI.unpooled[1] <= 5 && 5 <= CI.unpooled[2]) unpooled.count <- unpooled.count + 1
+}
+perform.pooled.3 <- pooled.count/N # Proportion of times
+perform.unpooled.3 <- unpooled.count/N # CI covers 5
+```
+
+The performance of pooled confidence interval gets slightly better (Proportion of unpooled confidence interval that contains 5 = `r perform.unpooled.3`, Proportion of pooled confidence interval that contains 5 = `r perform.pooled.3`). Still, unpooled confidence intervals contains true difference in means more than pooled confidence intervals (`r perform.unpooled.3` > `r perform.pooled.3`).
+
+#####m = 80, n = 80
+
+```{r, tidy = TRUE}
+pooled.count <- 0 
+unpooled.count <- 0 
+m <- 80 # sample size
+n <- 80 # sample size
+N <- 10000
+for (i in 1:N) {
+  x <- rnorm(m, 8, 10) # Draw m from N(8,10^2)
+  y <- rnorm(n, 3, 15) # Draw n from N(3,15^2)
+  # Conf ints, with pooled and unpooled variance
+  CI.pooled <- t.test(x, y, var.equal = T)$conf
+  CI.unpooled <- t.test(x, y)$conf
+  # Is 5 in interval? If yes, increase counter.
+  if (CI.pooled[1] <= 5 && 5 <= CI.pooled[2]) pooled.count <- pooled.count + 1
+  if (CI.unpooled[1] <= 5 && 5 <= CI.unpooled[2]) unpooled.count <- unpooled.count + 1
+}
+perform.pooled.4 <- pooled.count/N # Proportion of times
+perform.unpooled.4 <- unpooled.count/N # CI covers 5
+```
+
+There is no huge difference in performance between pooled and unpooled confidence intervals (Proportion of unpooled confidence interval that contains 5 = `r perform.unpooled.4`,  $\approx$ Proportion of pooled confidence interval that contains 5 = `r perform.pooled.4`).
+\
+An exception is when one sample size is very small, so that the sample provides
+little information about the variance of its population. In that case, it may
+be better to assume equal variances. 
+
+###Problem 36
+
+$1-\alpha = P(q_1 < \dfrac{X^2}{\sigma^2} < q_2) = P(\dfrac{1}{q_2} < \dfrac{\sigma^2}{X^2} < \dfrac{1}{q_1}) = P(\dfrac{X^2}{q_2} < \sigma^2 < \dfrac{X^2}{q_1})$
+\
+Therefore, CI = ($\dfrac{X^2}{q_{\chi^2_{0.975, 1}}},\dfrac{X^2}{q_{\chi^2_{0.025,1}}}$) = ($\dfrac{X^2}{5.024},\dfrac{X^2}{0.00098}$)
+
+###Problem 37
+
+**(a)**
+
+$\dfrac{\bar{X}-\mu}{S/\sqrt{n}} \sim N(0,1)$
+\
+0.95 = $P(-1.96 < \dfrac{\bar{X}-\mu}{S/\sqrt{n}} < 1.96) = P(-1.96\cdot\dfrac{S}{\sqrt{n}} < \bar{X}-\mu <1.96\cdot\dfrac{S}{\sqrt{n}})$ 
+\
+$= P(\mu-1.96\cdot\dfrac{S}{\sqrt{n}} < \bar{X} < \mu+1.96\cdot\dfrac{S}{\sqrt{n}})$
+\
+So 95% CI is ($\mu-1.96\cdot\dfrac{S}{\sqrt{n}}$, $\mu+1.96\cdot\dfrac{S}{\sqrt{n}}$)
+
+**(b)**
+
+n = 6, $\mu$ = `r round(mean(c(4, 6, 7, 9, 10, 13)), digits = 3)`, S = `r round(sd(c(4, 6, 7, 9, 10, 13)), digits=3)` 
+\
+95% CI is ($8.167 \pm 1.96\cdot\dfrac{S}{\sqrt{n}}$) = (`r round(mean(c(4, 6, 7, 9, 10, 13))+qnorm(0.025)*sd(c(4, 6, 7, 9, 10, 13))/sqrt(6), digits =3)`, `r round(mean(c(4, 6, 7, 9, 10, 13))+qnorm(0.975)*sd(c(4, 6, 7, 9, 10, 13))/sqrt(6), digits=3)`)
+
+### Problem 39
+$0.95 = P(q_{\chi^2_{0.025,4}} < 2\lambda X < q_{\chi^2_{0.975,4}}) = P(\dfrac{q_{\chi^2_{0.025,4}}}{2X} < \lambda < P(\dfrac{q_{\chi^2_{0.975,4}}}{2X})$
+\
+95% CI is ($\dfrac{0.2422}{X}$, $\dfrac{5.5716}{X}$)
+
+###Plus A
+
+#####Bootstrap Interval (Including Outlier)
+
+```{r}
+boot.weight <- numeric(10000)
+
+for (i in 1:10000){
+  sampleM <- sample(olympic.male, length(olympic.male), replace = TRUE)
+  sampleF <- sample(olympic.female, length(olympic.female), replace = TRUE)
+  boot.weight[i] <- mean(sampleM)-mean(sampleF)
+}
+
+boot.int.1 <- quantile(boot.weight, c(.025, .975))
+```
+
+Bootstrap interval (including outlier) is (`r round(boot.int.1[1], digits=3)`, `r round(boot.int.1[2], digits=3)`). Compared to t confidence interval, bootstrap interval is narrower and have higher lower bound and lower upper bound. 
+
+#####Bootstrap Interval (Omitting Outlier)
+
+```{r}
+boot.weight.2 <- numeric(10000)
+
+for (i in 1:10000){
+  sampleM <- sample(olympic.male, length(olympic.male), replace = TRUE)
+  sampleF <- sample(olympic.female.2, length(olympic.female.2), replace = TRUE)
+  boot.weight.2[i] <- mean(sampleM)-mean(sampleF)
+}
+
+boot.int.2 <- quantile(boot.weight.2, c(.025, .975))
+```
+
+Bootstrap interval (omitting outlier) is (`r round(boot.int.2[1], digits=3)`, `r round(boot.int.2[2], digits=3)`). Similarily, bootstrap interval is narrower. It has higher lower bound and higher upper bound compared to t confidence interval.  

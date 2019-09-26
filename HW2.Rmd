@@ -1,0 +1,587 @@
+---
+title: 'HW #2'
+author: "Colin Pi"
+date: "January 16th, 2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, out.width = "50%")
+library(resampledata)   #for textbook data sets
+library(stargazer)
+library(dplyr)
+```
+
+##Chapter 3
+
+###Problem 1
+
+```{r, tidy=TRUE}
+maze <- c(8,10,15)
+nonMaze <- c(5,9)
+obsDiffMouse <- mean(maze) - mean(nonMaze)
+```
+
+**(a)** The difference in mean times between treatment and control groups is `r obsDiffMouse`
+
+**(b)**
+
+```{r, tidy=TRUE}
+mouseData <- c(8,10,15,5,9)
+
+mouseN <- 10
+
+mouseChosen <- combn(mouseData,3)
+mouseNotChosen <- matrix(nrow = 2, ncol = 10)
+mouseResult <- numeric(mouseN)
+
+for(i in 1:mouseN){
+  mouseNotChosen[,i] <- setdiff(mouseData, mouseChosen[,i])
+  mouseResult[i] = round(mean(mouseChosen[,i]) - mean(mouseNotChosen[,i]), digits=2)
+}
+
+permMouse <- rbind(mouseChosen,mouseNotChosen,mouseResult)
+permMourse <- data.frame(permMouse)
+colnames(permMouse) <- c(1:10)
+row.names(permMouse) <- c("Group A-1","Group A-2","Group A-3","Group B-1","Group B-2","Difference in Mean Times")
+knitr::kable(permMouse)
+```
+
+**(c)**
+
+```{r, tidy=TRUE}
+pMouse <- sum(permMouse[6,] >= obsDiffMouse)/mouseN
+```
+
+The proportion of the differences are equal or larger than the observed difference in mean times is `r pMouse`
+
+**(d)**
+
+```{r, tidy=TRUE}
+mouseChosen2 <- combn(mouseData,3)
+mouseResult2 <- numeric(mouseN)
+
+for(i in 1:mouseN){
+  mouseResult2[i] = round(mean(mouseChosen2[,i]), digits=2)
+}
+
+pMouse2 <- sum(mouseResult2 >= mean(maze))/mouseN
+```
+
+The observed mean time of treatment group is `r mean(maze)`. The proportion of the means are equal or larger than the observed mean time of the treatment group is `r pMouse2`. 
+
+###Problem 2
+
+There is 1/10000 chance of drawing red marble if there are 9999 blue and 1 red marbles in the jar. In that the chance to drawing red marble in this case is so slim, I might raise objection on the professor's claim. But the chance of drawing red marble is 1/9, which is relatively higher than the former, if there are only 9 blue and 1 red marbles in the jar. So, I might believe there is a great chance for me to grab red marble from the jar. 
+
+###Problem 3
+
+**(a)** 0.006 provides stronger evidence for alternative hypothesis because the lower the p-value is the lower the probability of obtaining the observed result by chance
+
+**(b)** 0.04 provides stronger evidence that chance alone might account for the observed result because p-value denotes the probability of obtaining the observed result by chance.
+
+###Problem 5
+
+**(a)**
+
+$$
+\textit{H}_{0}: {\mu}_{American} = {\mu}_{United}
+$$
+$$
+\textit{H}_{\alpha}: {\mu}_{American} \neq {\mu}_{United}
+$$
+Where ${\mu}$ is the mean delay time in minutes.
+
+```{r, tidy=TRUE, fig.align='center'}
+meanDelay <- tapply(FlightDelays$Delay, FlightDelays$Carrier, mean)
+obsDiffDelay <- meanDelay[1]-meanDelay[2]
+numAmerican <- sum(FlightDelays$Carrier == "AA")
+delays <- subset(FlightDelays, select = Delay, drop=TRUE)
+delayN <- 10^4 - 1
+delayResult <- numeric(delayN)
+
+for(i in 1:delayN){
+  index <- sample(nrow(FlightDelays), size = numAmerican, replace=FALSE)
+  delayResult[i] <- mean(delays[index]) - mean(delays[-index]) 
+}
+hist(delayResult, xlab = "xbarAA-xbarUA", 
+     main = "Permutation distribution for delay time")
+abline(v = obsDiffDelay, col = "red", lty=5)
+pDelay <- (sum(delayResult <= obsDiffDelay)+1)/(delayN+1)*2
+```
+
+The observed difference in delay time between American and United Airline is `r obsDiffDelay`.
+\
+The permutation test gives a p-value of $4\cdot10^{-4}$, meaning that the probability of observing the mean difference that are as extreme or more extreme than `r obsDiffDelay` is $4\cdot10^{-4}$ if the chance is the only factor of explaining the difference in mean times between the two groups. Such a small p-value provides a statistically significant evidence to reject the null hypothesis that there is no difference the means of difference in delay times.
+
+**(b)**
+
+$$
+\textit{H}_{0}: {\mu}_{May} = {\mu}_{June}
+$$
+$$
+\textit{H}_{\alpha}: {\mu}_{May} \neq {\mu}_{June}
+$$
+Where ${\mu}$ is the mean delay time in minutes.
+
+```{r, tidy=TRUE, fig.align='center'}
+meanDelay2 <- tapply(FlightDelays$Delay, FlightDelays$Month, mean)
+obsDiffDelay2 <- meanDelay2[1]-meanDelay2[2]
+numMay <- sum(FlightDelays$Month == "May")
+delayResult2 <- numeric(delayN)
+
+for(i in 1:delayN){
+  index <- sample(nrow(FlightDelays), size = numMay, replace=FALSE)
+  delayResult2[i] <- mean(delays[index]) - mean(delays[-index]) 
+}
+hist(delayResult2, xlab = "xbarMay-xbarJune", 
+     main = "Permutation distribution for delay time")
+abline(v = obsDiffDelay2, col = "red", lty=5)
+pDelay2 <- (sum(delayResult2 <= obsDiffDelay2)+1)/(delayN+1)*2
+```
+
+The observed difference in mean times between May and June flights is `r obsDiffDelay2`.
+\
+The permutation test gives a p-value of $2\cdot10^{-4}$, meaning that the probability of observing the mean difference that are as extreme or more extreme than `r obsDiffDelay2` is $2\cdot10^{-4}$ if the chance is the only factor of explaining the difference in mean times between the two groups. Such a small p-value provides a statistically significant evidence to reject the null hypothesis that there is no difference in means of delay times between May and June.
+
+###Problem 6
+
+**(a)**
+
+$$
+\textit{H}_{0}: {p}_{American, Delay > 20} = {p}_{United, Delay > 20}
+$$
+$$
+\textit{H}_{\alpha}: {p}_{American, Delay > 20} \neq {p}_{United, Delay > 20}
+$$
+Where ${p}$ is the proportion of delays longer than 20 minutes.
+
+```{r, tidy=TRUE, fig.align='center'}
+Delay.AA <- subset(FlightDelays, select = Delay, subset = Carrier == "AA", drop = T)
+Delay.UA <- subset(FlightDelays, select = Delay, subset = Carrier == "UA", drop = T)
+obsDiffDelay3 <- mean(Delay.AA > 20) - mean(Delay.UA > 20)
+delayResult3 <- numeric(delayN)
+
+for(i in 1:delayN){
+  index <- sample(length(Delay.AA)+length(Delay.UA), size = length(Delay.AA), replace=FALSE)
+  delayResult3[i] <- mean(delays[index] > 20) - mean(delays[-index] > 20) 
+}
+hist(delayResult3, xlab = "p(AA>20)-p(UA>20)", 
+     main = "Permutation distribution for proportion of delay times longer than 20 minutes")
+abline(v = obsDiffDelay3, col = "red", lty=5)
+pDelay3 <- (sum(delayResult3 <= obsDiffDelay3)+1)/(delayN+1)*2
+```
+
+The observed difference in proportion of flights longer than 20 minutes between American and United Airline is `r obsDiffDelay3`.
+\
+The permutation test gives a p-value of `r round(pDelay3, digits=4)`,  meaning that the probability of observing the difference in proportion that are as extreme or more extreme than `r obsDiffDelay3` is `r round(pDelay3, digits=4)` if the chance is the only factor of explaining the difference in proportion between the two groups. Such a small p-value provides a statistically significant evidence to reject the null hypothesis that there is no difference the proportions delays longer than 20 minutes.
+
+\newpage
+
+**(b)**
+
+$$
+\textit{H}_{0}: {\sigma}_{American} = {\sigma}_{United}
+$$
+$$
+\textit{H}_{\alpha}: {\sigma}_{American} \neq {\sigma}_{United}
+$$
+Where ${\sigma}$ is the variance in delay time in minutes.
+
+```{r, tidy=TRUE, fig.align='center'}
+obsDelayVar <- var(Delay.AA)/var(Delay.UA)
+delayResult4 <- numeric(delayN)
+
+for(i in 1:delayN){
+  index <- sample(length(delays), size = length(Delay.AA), replace=FALSE)
+  delayResult4[i] <- var(delays[index])/var(delays[-index]) 
+}
+hist(delayResult4, xlab = "VarAA/VarUA", 
+     main = "Permutation distribution for delay time")
+abline(v = obsDelayVar, col = "red", lty=5)
+pDelay4 <- (sum(delayResult4 <= obsDelayVar)+1)/(delayN+1)*2
+```
+
+The observed ratio of variances is `r obsDelayVar`. 
+\
+The permutation test gives a p-value of `r round(pDelay4, digits=4)`, meaning that the probability of observing the ratio that are as extreme or more extreme than `r obsDelayVar` is `r round(pDelay4, digits=4)` if the chance is the only factor of explaining the difference in proportion between the two groups. Such a high p-value does not providea statistically significant evidence to reject the null hypothesis that there is no difference in the variances of delay times between American and United Airlines.
+
+###Problem 11
+
+**(a)**
+
+```{r, tidy=TRUE, fig.align='center'}
+home <- subset(Phillies2009, select = StrikeOuts, subset = Location == "Home", drop = T)
+away <- subset(Phillies2009, select = StrikeOuts, subset = Location == "Away", drop = T)
+plot.ecdf(home, col = "red", xlab = "Strike Outs per game")
+plot.ecdf(away, col = "blue", pch = 2, add = TRUE)
+legend("topleft",legend = c("Home","Away"), col = c("red","blue"), pch = c(19,2))
+```
+
+The center of distribution (first to third quartiles) for Home is slightly smaller in magnitude (strike outs per game) than that of the away. But Home has higher maximum and minimum values than Away. 
+
+**(b)**
+
+The mean of strike outs per home game home is `r mean(home)`. The mean of strike outs per away game is `r mean(away)` 
+
+**(c)**
+
+$$
+\textit{H}_{0}: {\mu}_{Home} = {\mu}_{Away}
+$$
+$$
+\textit{H}_{\alpha}: {\mu}_{Home} \neq {\mu}_{Away}
+$$
+
+Where ${\mu}$ is the mean Strike outs per game.
+
+```{r, tidy=TRUE, fig.align='center'}
+StrikeN <- 10^4-1
+strikeResult <- numeric(StrikeN)
+strikes <- subset(Phillies2009, select = StrikeOuts, drop=TRUE)
+obsDiffStrike <- mean(home) - mean(away)
+
+for(i in 1:StrikeN){
+  index <- sample((length(home)+length(away)), size = length(home), replace=FALSE)
+  strikeResult[i] <- mean(strikes[index]) - mean(strikes[-index]) 
+  }
+hist(strikeResult, xlab = "xbarHome-xbarAway", 
+     main = "Permutation distribution for difference in means of Strike Outs")
+abline(v = obsDiffStrike, col = "red", lty=5)
+pStrike <- (sum(strikeResult <= obsDiffStrike)+1)/(StrikeN+1)*2
+```
+
+The observed difference in mean Strikes between home and away games is `r obsDiffStrike`.
+\
+The permutation test gives a p-value of `r pStrike`, meaning that the probability of observing the mean difference that are as extreme or more extreme than `r obsDiffStrike` is `r pStrike` if the chance is the only factor of explaining the difference in mean times between the two groups. Such a big p-value does not provides a statistically significant evidence to reject the null hypothesis that there is no difference in means of strike outs between home and away games. In other words, we cannot rule out chance variability for the outcome we obtained. 
+
+###Problem 12
+
+**(a)**
+
+```{r, tidy=TRUE}
+tableProp <- prop.table(table(Recidivism$Offense, Recidivism$Recid),1)
+knitr::kable(tableProp)
+obsDiffProp <- tableProp[1,2]-tableProp[2,2]
+```
+
+The observed difference in proportion of Recidivism between Felony and Misdemeanor is `r obsDiffProp`
+
+**(b)**
+
+$$
+\textit{H}_{0}: {p}_{Felony} = {p}_{Misdemeanor}
+$$
+$$
+\textit{H}_{\alpha}: {p}_{Felony} \neq {p}_{Misdemeanor}
+$$
+
+Where ${p}$ is the proportion of Recidivism.
+
+```{r, tidy=TRUE, fig.align='center'}
+recidN <- 10^4-1
+recidResult <- numeric(recidN)
+recids <- subset(Recidivism, select = Recid, drop=TRUE)
+numFelony <- sum(Recidivism$Offense == "Felony")
+
+for(i in 1:recidN){
+  index <- sample(length(recids), size = numFelony, replace=FALSE)
+  recidResult[i] <- mean(recids[index] == "Yes") - mean(recids[-index] == "Yes") 
+}
+
+hist(recidResult, xlab = "pFelony-pMisd", 
+     main = "Permutation distribution for proportion of Recividism")
+abline(v = obsDiffProp, col = "red", lty=5)
+pRecid <- (sum(recidResult <= obsDiffProp)+1)/(recidN+1)*2
+```
+
+The permutation test gives a p-value of `r round(pRecid, digits=4)`,  meaning that the probability of observing the difference in proportion that are as extreme or more extreme than `r obsDiffProp` is `r round(pRecid, digits=4)` if the chance is the only factor of explaining the difference in proportion between the two groups. The p-value provides a mild evidence to reject the null hypothesis that there is no difference in the proportions of Recidivism between Felongy and Misdemeanor groups. 
+
+###Problem 15
+
+**(a)** The dataset provides prices of particular products in Target and Walmart, the major retail stores in America. So, the prices of same good in the two different stores must be correlated, corresponding to the definition of matched pairs data.
+
+**(b)**
+
+```{r, results='asis'}
+stargazer(Groceries, header=FALSE, title="Summary statistics of prices of each store")
+```
+
+**(c)**
+
+$$
+\textit{H}_{0}: {\mu}_{Target} = {\mu}_{Walmart}
+$$
+$$
+\textit{H}_{\alpha}: {\mu}_{Target} \neq {\mu}_{Walmart}
+$$
+Where ${\mu}$ is the mean price of goods.
+
+```{r, tidy=TRUE, fig.align='center'}
+meanPrice <- tapply(Groceries$Target, Groceries$Walmart, mean)
+priceDiff <- Groceries$Walmart - Groceries$Target
+obsDiffPrice <- mean(priceDiff)
+priceN <- 10^4-1
+priceResult <- numeric(priceN)
+
+for (i in 1:priceN){
+  signs <- sample( c(-1,1),length(priceDiff), replace = T)
+  resamp <- signs*priceDiff
+  priceResult[i] <- mean(resamp)
+}
+
+hist(priceResult, xlab = "xbarWalmart - xbarTarget", 
+     main = "Distribution of Mean Differences of Price")
+abline(v = obsDiffPrice, col = "red", lty=5)
+abline(v = median(priceResult), col = "blue", lty=5)
+pPrice <- (sum(priceResult <= obsDiffPrice)+1)/(priceN+1)*2
+```
+
+The observed mean of differences prices of goods between Walmart and Target is `r obsDiffPrice`
+\
+The permutation test gives a p-value of `r round(pPrice, digits=4)`,  meaning that the probability of observing the difference in proportion that are as extreme or more extreme than `r obsDiffProp` is `r round(pPrice, digits=4)` if the chance is the only factor of explaining the difference in proportion between the means of price difference between the two stores. Such a high p-value does not provide a strong evidence to reject the null hypothesis that there is no difference in the mean of price differences between the two stores. 
+
+
+**(d)**
+
+```{r, tidy=TRUE, fig.align='center'}
+hist(priceDiff, 
+     main = "Distribution of Price Difference", 
+     xlab = "Walmart Price - Target Price")
+```
+
+The price of Quaker Oats Life cereal in Walmart is almost twice as expensive as it is in Target.
+
+\newpage
+
+**(e)**
+
+$$
+\textit{H}_{0}: {\mu}_{Target, without Quaker} = {\mu}_{Walmart, without Quaker}
+$$
+$$
+\textit{H}_{\alpha}: {\mu}_{Target, without Quaker} \neq {\mu}_{Walmart, without Quaker}
+$$
+Where ${\mu}$ is the mean price of goods.
+
+```{r, tidy=TRUE, fig.align='center'}
+Groceries2 <- subset(Groceries, Product != "Quaker Oats Life Cereal  Original ", select = Product:UnitType)
+priceDiff2 <- Groceries2$Walmart - Groceries2$Target
+obsDiffPrice2 <- mean(priceDiff2)
+priceResult2 <- numeric(priceN)
+
+for (i in 1:priceN){
+  signs <- sample( c(1,-1),length(priceDiff2), replace = T)
+  resamp <- priceDiff2 * signs
+  priceResult2[i] <- mean(resamp)
+}
+
+hist(priceResult2, xlab = "xbarWalmart - xbarTarget", 
+     main = "Distribution of Mean Differences of Price")
+abline(v = obsDiffPrice2, col = "red", lty=5)
+pPrice2 <- (sum(priceResult2 <= obsDiffPrice2)+1)/(priceN+1)*2
+```
+
+The observed mean of differences prices of goods between Walmart and Target is `r obsDiffPrice2`.
+\
+The permutation test gives a p-value of `r round(pPrice2, digits=4)`,  meaning that the probability of observing the difference in proportion that are as extreme or more extreme than `r obsDiffPrice2` is `r round(pPrice2, digits=4)` if the chance is the only factor of explaining the difference in proportion between the means of price difference between the two stores. Such a low p-value provides a strong evidence to reject the null hypothesis that there is no difference in the mean of price differences between the two stores. 
+
+\newpage
+
+##Chapter 4
+
+###Problem 1
+
+```{r, tidy=TRUE, fig.align='center'}
+pop1 <- c(1, 2, 5, 6, 10, 12)
+observedPop1 <- median(pop1)
+pop1Chosen <- combn(pop1,3)
+pop1N <- ncol(pop1Chosen)
+pop1Result <- numeric(pop1N)
+
+for(i in 1:pop1N){
+   pop1Result[i] = median(pop1Chosen[,i])
+}
+
+stripchart(pop1Result, method="stack", offset = .5, at = .15, pch = 19, xlab = "Median", 
+     main = "Sample Distribution of median (n=3)")
+abline(v = observedPop1, col = "red", lty=5)
+abline(v = mean(pop1Result), col = "blue", lty = 6)
+legend("topright",legend = c("Population Median","Mean of Medians"), col = c("red","blue"), pch = c(4,4))
+```
+
+Population median (`r observedPop1`) is slightly smaller than mean of medians of the sample (`r mean(pop1Result)`).
+
+###Problem 3
+
+**(a)**
+
+```{r, tidy=TRUE, fig.align='center'}
+a <- c(1, 3, 4, 5)
+b <- c(5, 7, 9)
+
+abSum <- function(index){
+  return(a + b[index])
+}
+
+resultSum <- unlist(lapply(c(1,2,3),abSum))
+
+stripchart(resultSum, method="stack", offset = .5, at = .15, pch = 19, xlab = "Sum", 
+     main = "Sample Distribution of A+B")
+```
+
+**(b)** No. Since you are sampling 1 number from each group, there is no difference in results between sampling with and without replacement. 
+
+**(c)**
+
+```{r, tidy=TRUE, fig.align='center'}
+meanA <- mean(a)
+meanB <- mean(b)
+resultSumMean <- mean(resultSum)
+```
+
+$\bar{A}$ = `r meanA`
+\
+$\bar{B}$ = `r meanB`
+\
+$\overline{A+B}$ = `r resultSumMean`
+\
+$\bar{A}$ + $\bar{B}$ = $\overline{A+B}$
+
+**(d)**
+
+```{r, fig.align='center'}
+p13 <- sum(resultSum >= 13)/(12)
+stripchart(resultSum, method="stack", offset = .5, at = .15, pch = 19, xlab = "Sum", 
+     main = "Sample Distribution of A+B")
+abline(v = 13, col = "red", lty=5)
+```
+
+The probability that the sum is 13 or larger is 2/12 = 0.1667
+
+###Problem 4
+
+**(a)**
+
+```{r, fig.align='center'}
+pop2 <- c(3, 5, 6, 6, 8, 11, 13, 15, 19, 20)
+meanPop2 <- mean(pop2)
+sdPop2 <- sd(pop2)
+stripchart(pop2, method="stack", offset = .5, at = .15, pch = 19, 
+           main = "Dotplot of the Population", xlab = "Values")
+abline(v = meanPop2, col = "red", lty=5)
+```
+
+${\mu}$ = `r meanPop2`
+\
+
+${\sigma}$ = `r sdPop2`
+
+**(b)**
+
+```{r, fig.align='center'}
+pop2N <- 10^4
+pop2Xbar <- numeric(pop2N)
+
+for (i in 1:pop2N) {
+  samp <- sample(pop2, 4, replace = TRUE)
+  pop2Xbar[i] <- mean(samp)
+}
+
+hist(pop2Xbar, 
+     main = "Sample Distribution (n=4)", 
+     xlab = "xbar")
+```
+
+${\bar{x}}$ = `r mean(pop2Xbar)`: The mean is almost the same as the population mean.
+\
+
+$SE_{x}$ = `r sd(pop2Xbar)`: SE is almost a half of standard deviation.
+
+**(c)**
+
+```{r, fig.align='center'}
+hist(pop2Xbar, 
+     main = "Sample Mean Distribution (n=4)", 
+     xlab = "xbar")
+abline(v = 11, col = "red", lty=5)
+prop11 <- mean(pop2Xbar < 11)
+```
+
+P(${\bar{x}}$ < 11) = `r prop11`
+
+###Problem 5
+
+**(a)**
+
+```{r, fig.align='center'}
+popA <- c(3, 5, 7, 9, 10, 16)
+popB <- c(8, 10, 11, 15, 18, 25, 28)
+
+pop3N <- 10^4
+resultPop3 <- numeric(pop3N)
+
+for (i in 1:pop3N) {
+  samp1 <- sample(popA, 3, replace = FALSE)
+  samp2 <- sample(popB, 3, replace = FALSE)
+  resultPop3[i] <- max(samp1) + max(samp2)
+}
+
+hist(resultPop3, 
+     main = "Sample Distribution of max(A) + max(B) (n=3)", 
+     xlab = "max(A) + max(B)")
+```
+
+The distribution is heavily skewed to the left. There are two breaks (around 28 and 38) in the histogram.
+
+**(b)**
+
+```{r}
+pPop3 <- mean(resultPop3 < 20)
+```
+
+P(max(A) + max(B) < 20) = `r pPop3`
+
+**(c)**
+
+```{r, fig.align='center'}
+result2Pop3 <- numeric(pop3N)
+
+for (i in 1:pop3N) {
+  samp1 <- sample(popA, 3, replace = FALSE)
+  samp2 <- sample(popB, 3, replace = FALSE)
+  result2Pop3[i] <- max(union(samp1,samp2))
+}
+
+hist(result2Pop3, 
+     main = "Sample Distribution of maximum of A U B (n=3)", 
+     xlab = "max(A U B)")
+```
+
+Likewise, the distribution is heavily skewed to the left. I can see more breaks in the histogram than the distribution in (a).
+
+**(d)**
+
+```{r, fig.align='center'}
+hist(result2Pop3, 
+     main = "Sample Distribution of maximum of A U B (n=3)", 
+     xlab = "max(A U B)")
+abline(v = 20, col = "red", lty=5)
+pPop32 <- sum(result2Pop3 < 20)/(pop3N)
+```
+
+P((max(A) U max(B)) < 20) = `r pPop32`
+
+##Plus
+
+###A
+
+**(a)** What hypothesis testing does is ruling out the chance variation cannot be the explanation for the observed statistic to be occurred, not providing a reason behind the deviation of the observed statistic from its norm. So the hypothesis test result is sufficient to decide whether the level of suspicion is high enough to bring Gilbert to the court (what grand juries are asked to do); however, it cannot give any support on what caused the higher death rate during Gilbert's shift (what trail juries are asked to find) because this the data is obtained by observation (observational studies)
+
+**(b)** An understanding of the difference between observational study and a randomized experiment. Observational studies, due to its unrandomization in dividing the "treatment" group (the group inhabiting the characteristics that the study is aiming at) from the controls, cannot fully adjust for the effect of "lurking variables," but randomized experiment, which devides treatment and control group by random, cna provide the cause-and-effect relation for the difference in results between treatment and control group. 
+
+**(c)** If P, then Q is equivalent to If not Q, then not P. The statment "If it is raining, then there are clouds in the sky." is equivalent to "If there are not clouds in the sky, then it is not raining."
+
+###B
+
+I did it directly on Chapter 3 Question 11.

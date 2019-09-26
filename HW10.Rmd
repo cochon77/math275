@@ -1,0 +1,334 @@
+---
+title: "HW10"
+author: "Colin Pi"
+date: '2019 3 4 '
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(resampledata)
+```
+
+## Chapter 10
+
+### Problem 18
+
+Since we don't know $\lambda$, we have to estimate it from taking an empirical average of doubles hits.
+
+```{r}
+obs.18 <- table(Phillies2009$Doubles)
+lambda.18 <- mean(Phillies2009$Doubles)
+```
+
+We get $\hat{\lambda}$ = `r round(lambda.18, digits = 4)`. We use this esimate to get the expected number of double hits from a theoretical model of Pois($\hat{\lambda}$). 
+
+$$
+H_{0}:The\ data\ are\ modeled\ by\ a\ Poisson\ distribution.
+$$
+$$
+H_{\alpha}:The\ data\ are\ not\ modeled\ by\ a\ Poisson\ distribution.
+$$
+
+```{r}
+expect.18 <- dpois(0:6, lambda.18)*sum(obs.18)
+table.18 <- rbind(obs.18, expect.18)
+row.names(table.18) <- c("observed","expected")
+knitr::kable(table.18, caption = "Goodness of fit table")
+
+c.18 <- sum((table.18[1,]-table.18[2,])^2/table.18[2,])
+p.18 <- pchisq(c.18,5, lower.tail = FALSE)
+```
+
+The degrees of freedom is 7 (number of cells) - 1 - 1 (number of parameters estimated) = 5. The p-value for the goodness of fit test is 0.394, suggesting that there is not an enough evidence to reject the claim that the data are modeled by a Poisson distribution.
+
+### Problem 19
+
+**(a)**
+
+$L(p\ |\ x_1, x_2...x_n) = \prod_{i = 1}^{n} f(x_i;p) = \prod_{i = 1}^{n} p\cdot(1-p)^{x_{i}}$
+\
+$Log(L(p)) = n\cdot log(p) + \sum_{i=1}^{n}x_i \cdot log(1-p)$
+\
+$\dfrac{d}{dp}Log(L(p)) = \dfrac{n}{p} - \dfrac{\sum_{i=1}^{n}x_i}{1-p} = 0$
+\
+$\dfrac{n}{p} = \dfrac{\sum_{i=1}^{n}x_i}{1-p}\rightarrow \dfrac{1-p}{p} = \dfrac{\sum_{i=1}^{n}x_i}{n} = \bar{x} \rightarrow p = \dfrac{1}{\bar{x}+1}$
+
+```{r}
+obs.19 <- c(80,40,22,15,10)
+xbar.19 <- sum(c(0,1,2,3,4)*obs.19[1:5])/sum(obs.19)
+```
+
+$\bar{x} = 1.011976$
+
+```{r}
+phat.19 <- 1/(1+xbar.19)
+```
+
+So $\hat{p} = 0.497$
+
+**(b)**
+
+```{r}
+expect.19 <- dgeom(0:4, phat.19)*sum(obs.19)
+table.19 <- rbind(obs.19, expect.19)
+colnames(table.19) <- c(0,1,2,3,4)
+row.names(table.19) <- c("observed","expected")
+knitr::kable(table.19, caption = "Goodness of fit table")
+
+c.19 <- sum((table.19[1,]-table.19[2,])^2/table.19[2,])
+p.19 <- pchisq(c.19,3, lower.tail = FALSE)
+```
+
+The degrees of freedom is 5 (number of cells) - 1 - 1 (number of parameters estimated) = 3. The p-value for the goodness of fit test is 0.101, suggesting that there is not an enough evidence to reject the claim that the data are modeled by a Geometric distribution.
+
+### Problem 23
+
+Expected Count = $\dfrac{rowSum \cdot colSum}{Total\ sum} = \dfrac{m+10}{2}$ for all four cells.
+\
+C = $\dfrac{1}{(m+10)/2}[(m-\dfrac{m+10}{2})^{2} + (m-\dfrac{m+10}{2})^{2} + (10-\dfrac{m+10}{2})^2+(10-\dfrac{m+10}{2})^{2}]$
+\
+= $\dfrac{2}{(m+10)}[(\dfrac{m-10}{2})^2+(\dfrac{m-10}{2})^2+(\dfrac{10-m}{2})^2+(\dfrac{10-m}{2})^2]$
+\
+= $\dfrac{4}{(m+10)}[(\dfrac{m-10}{2})^2+(\dfrac{10-m}{2})^2] = \dfrac{1}{(m+10)}[(m-10)^2+(10-m)^2]$
+\
+=$\dfrac{2}{(m+10)}(m-10)^2 \leq q_{0.95} = 3.841459$
+\
+$\therefore m \leq 4.68845$ or $\geq 17.2323$.
+
+### Problem 26
+
+**(a)** Group 1: 350; Group 2: 300
+
+**(b)** $O_1 = \dfrac{0.35}{0.65}$, $O_2 = \dfrac{0.3}{0.7}$, $\dfrac{O_1}{O_2} = \dfrac{0.35/0.65}{0.3/0.7} = 1.25641$
+
+**(c)** Group 1: 60; Group 2: 10
+
+**(d)** $O_1 = \dfrac{0.06}{0.94}$, $O_2 = \dfrac{0.01}{0.99}$, $\dfrac{O_1}{O_2} = \dfrac{0.06/0.94}{0.01/0.99} = 6.319149$
+\
+The odds that a person in group A will get the disease is 6.319149 times greater
+than the odds that a person in group B will get the disease.
+
+### Problem 27
+
+$\pi_{short,\ bullied} = 42/92$; $\pi_{not\ short,\ bullied} = 30/117$;
+\
+$O_{short} = \dfrac{42}{50}$, $O_{not\ short} = \dfrac{30}{87}$, $\dfrac{O_{short}}{O_{not\ short}} = \dfrac{42/50}{30/87} = 2.436$
+\
+The odds that a short pupil will get bullied is 2.296 times greater
+than the odds that not short pupil will get bullied.
+
+### Problem 28
+
+$\pi_{A,\ C} = a/(a+b)$; $\pi_{B,\ C} = c/(c+d)$;
+\
+$O_{A} = \dfrac{a}{b}$, $O_{B} = \dfrac{c}{d}$, $\dfrac{O_{A}}{O_{B}} = \dfrac{a/b}{c/d} = \dfrac{a\cdot d}{b\cdot c}$
+
+## Chapter 11
+
+### Problem 1
+
+**(a)**
+
+```{r}
+theta.1 <- c(0.4,0.5,0.6)
+prior.1 <- c(1/5,3/5,1/5)
+likelihood.1 <- (theta.1^4)*(1-theta.1)
+priorLike.1 <- prior.1*likelihood.1
+posterior.1 <- priorLike.1/sum(priorLike.1)
+
+bayes.1 <- cbind(theta.1,prior.1,likelihood.1,priorLike.1,posterior.1)
+colnames(bayes.1) <- c("Theta","Prior","Likelihood","Prior X Likelihood", "Posterior")
+knitr::kable(bayes.1)
+```
+
+**(b)**
+
+Given that I observed four wins out of five games, the probability that $\theta$ = 0.6 is 0.322 (32.2%).
+
+**(c)**
+
+```{r}
+expected.prior.1 <- sum(theta.1*prior.1)
+expected.posterior.1 <- sum(theta.1*posterior.1)
+```
+
+$E[\theta]_{prior}$ = 0.5
+\
+$E[\theta]_{posterior}$ = 0.5226654
+
+### Problem 2
+
+- Friend 1
+    Posterior = $\dfrac{Prior \cdot Likelihood}{\sum Prior \cdot Likelihood} = \dfrac{Prior \cdot Likelihood}{0.123c}$\
+    $P(\theta\ = 0.4|\ Win\ 4\ out\ of\ 5) = \dfrac{0.0288c}{0.123c} = 0.2341463$\
+    $P(\theta\ = 0.5|\ Win\ 4\ out\ of\ 5) = \dfrac{0.0750c}{0.123c} = 0.6097561$\
+    $P(\theta\ = 0.6|\ Win\ 4\ out\ of\ 5) = \dfrac{0.0192c}{0.123c} = 0.1560976$\
+
+- Friend 2
+    Posterior = $\dfrac{Prior \cdot Likelihood}{\sum Prior \cdot Likelihood} = \dfrac{Prior \cdot Likelihood}{0.123cd}$\
+    $P(\theta\ = 0.4|\ Win\ 4\ out\ of\ 5) = \dfrac{0.0288cd}{0.123cd} = 0.2341463$\
+    $P(\theta\ = 0.5|\ Win\ 4\ out\ of\ 5) = \dfrac{0.0750cd}{0.123cd} = 0.6097561$\
+    $P(\theta\ = 0.6|\ Win\ 4\ out\ of\ 5) = \dfrac{0.0192cd}{0.123cd} = 0.1560976$\
+
+Posterior probabilities are the same.
+
+### Problem 5
+
+**(a)**
+
+```{r}
+ci.5 <- prop.test(295,1324, conf.level = 0.9)$conf
+```
+
+90% confidence interval: (0.2048, 0.2424)
+
+**(b)**
+
+$E[\theta] = \dfrac{\alpha}{\alpha+\beta}$ = 0.3, $var[\theta] = \dfrac{\alpha\beta}{(\alpha+\beta)^2(\alpha+\beta+1)} = 0.02^2$
+\
+$\alpha = 786/5, \ \beta = 1834/5$
+\
+$P(\theta \ | \ X = 295) \propto \theta^{295+786/5-1}(1-\theta)^{1324-295+1834/5-1}$
+\
+$\theta\ |\ X=295\ \sim Beta(452.2, 1395.8)$
+
+```{r}
+lower.5 <- qbeta(0.05,452.2, 1395.8)
+upper.5 <- qbeta(0.95,452.2, 1395.8)
+```
+
+90% credible interval: (`r round(lower.5, digits = 3)`, `r round(upper.5, digits = 3)`)
+
+**(c)**
+
+```{r}
+p.5 <- pbeta(0.23, 452.2, 1395.8)
+```
+
+$P(\theta<0.23\ |\ X=295)$ = `r round(p.5, digits = 3)`
+
+### Problem 6
+
+**(a)**
+
+```{r}
+ci.6 <- prop.test(160,178)$conf
+```
+
+95% confidence interval: (`r round(ci.6[1], digits = 3)`, `r round(ci.6[2], digits = 3)`)
+
+**(b)**
+
+- First statistician:
+
+    $E[\theta] = \dfrac{\alpha}{\alpha+\beta}$ = 0.85, $var[\theta] = \dfrac{\alpha\beta}{(\alpha+\beta)^2(\alpha+\beta+1)} = 0.0025$\
+    $\alpha = 85/2, \ \beta = 15/2$\
+    $P(\theta \ | \ X = 160) \propto \theta^{160+85/2-1}(1-\theta)^{178-160+15/2-1}$\
+    $\theta\ |\ X=160\ \sim Beta(202.5, 25.5)$
+
+```{r}
+mean.6.1 <- 202.5/(202.5+25.5)
+lower.6.1 <- qbeta(0.025, 202.5, 25.5)
+upper.6.1 <- qbeta(0.975, 202.5, 25.5)
+```
+
+$E[\theta\ |\ X=160]$ = `r round(mean.6.1, digits = 3)`\
+95% credible interval of statistician 1: (`r round(lower.6.1, digits = 3)`, `r round(upper.6.1, digits = 3)`)
+
+- Second statistician:
+
+    $\alpha = 1, \ \beta = 1$\
+    $P(\theta \ | \ X = 160) \propto \theta^{160+1-1}(1-\theta)^{178-160+1-1}$\
+    $\theta\ |\ X=160\ \sim Beta(161, 19)$
+
+```{r}
+mean.6.2 <- 161/(161+19)
+lower.6.2 <- qbeta(0.025, 161, 19)
+upper.6.2 <- qbeta(0.975, 161, 19)
+```
+
+$E[\theta\ |\ X=160]$ = `r round(mean.6.2, digits = 3)`\
+95% credible interval of statistician 3: (`r round(lower.6.2, digits = 3)`, `r round(upper.6.2, digits = 3)`)
+
+- Third statistician:
+
+    $\alpha = 6, \ \beta = 4$\
+    $P(\theta \ | \ X = 160) \propto \theta^{160+6-1}(1-\theta)^{178-160+4-1}$\
+    $\theta\ |\ X=160\ \sim Beta(166, 22)$
+
+```{r}
+mean.6.3 <- 166/(166+22)
+lower.6.3 <- qbeta(0.025, 166, 22)
+upper.6.3 <- qbeta(0.975, 166, 22)
+```
+$E[\theta\ |\ X=160]$ = `r round(mean.6.3, digits = 3)`
+\
+95% credible interval of statistician 3: (`r round(lower.6.3, digits = 3)`, `r round(upper.6.3, digits = 3)`)
+
+**(c)**
+
+```{r, fig.align='center', fig.height=3.5}
+par(mfrow=c(1,3))
+curve(dbeta(x, 202.5, 25.5), from = 0, to = 1, ylab = "Density", main = "First")
+curve(dbeta(x, 85/2, 15/2), add = TRUE, col = "red", lty = 2)
+legend(.05, 11, legend = c("Prior", "Posterior"),
+lty = c(2, 1), col = c("red", "black"))
+
+curve(dbeta(x, 161, 19), from = 0, to = 1, ylab = "", main = "Second")
+curve(dunif(x), add = TRUE, col = "red", lty = 2)
+legend(.05, 11, legend = c("Prior", "Posterior"),
+lty = c(2, 1), col = c("red", "black"))
+
+curve(dbeta(x, 166, 22), from = 0, to = 1, ylab = "", main = "Third")
+curve(dbeta(x, 6, 4), add = TRUE, col = "red", lty = 2)
+legend(.05, 11, legend = c("Prior", "Posterior"),
+lty = c(2, 1), col = c("red", "black"))
+par(mfrow=c(1,1))
+```
+
+**(d)**
+
+```{r}
+p.6.1 <- pbeta(0.9, 202.5, 25.5, lower.tail = FALSE)
+p.6.2 <- pbeta(0.9, 161, 19, lower.tail = FALSE)
+p.6.3 <- pbeta(0.9, 166, 22, lower.tail = FALSE)
+```
+
+First statistician: $P(\theta\ |\ X = 160)$ = `r round(p.6.1, digits = 3)`\
+Second statistician: $P(\theta\ |\ X = 160)$ = `r round(p.6.2, digits = 3)`\
+Third statistician: $P(\theta\ |\ X = 160)$ = `r round(p.6.3, digits = 3)`
+
+### Plus A
+
+**(i)** Bayesian Statistics were used save the lost fisherman Mr. Aldridge in the Atlantic Ocean. Sarops, the search and rescue system based on Bayesian statistics, helped the Coast Guard to narrow down the places that Mr. Aldridge is likely to be at by incorporating the data (prevailing current, places searched) into the approximation.
+
+**(ii)** Relying on p-value could lead the researchers to make a false conclusion (type I error). 
+He warns that the "statiscally significant" outcome could have been produced by a pure chance, with probability of 1/20 if the confidence level is 0.05. 1/20 chance of an error is quite high to simply ignore.
+ 
+### Plus B
+
+**(i)** 10/150
+
+**(ii)** 1/2
+
+\newpage
+
+**(iii)** Our interest is whether the seniors' preference for tofu has been changed from the freshman year, so we should disregard the students whose preferences hasn't changed (who like or hate tofu in both years).\
+Now we just do a one-sample test of a proportion with
+
+$$
+\textit{H}_{0}: P=0.5
+$$
+$$
+\textit{H}_{\alpha}: P \neq 0.5
+$$
+where P is the proportion of students who like tofu in senior year but not in their freshman year.
+
+```{r}
+p.b <- 2*pbinom(18,23,0.5, lower.tail = FALSE)
+```
+
+
+The p-value of the hypothesis test is `r round(p.b, digits = 3)`, suggesting that there is a significant evidence to rule out the claim that the proportion of students who like tofu in their senior year but not in their freshman year and the proportion of students who don't like tofu in their senior year but like in their freshman year. (It suggests that the difference in proportions is significant)
+

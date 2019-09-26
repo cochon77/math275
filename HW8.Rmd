@@ -1,0 +1,430 @@
+---
+title: "HW8"
+author: "Colin Pi"
+date: '2019 2 22 '
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, out.width = "60%")
+library(resampledata)
+library(stargazer)
+library(kableExtra)
+```
+
+### Problem 1
+
+$$
+\textit{H}_{0}: {\mu}_{calcium \ level} = 9.5 mg/dl
+$$
+$$
+\textit{H}_{\alpha}: {\mu}_{calcium \ level} \neq 9.5 mg/dl
+$$
+
+Since we don't have population standard deviaton $\sigma$, we should use s to estimate standard error. 
+
+```{r}
+t.1 <- (9.2-9.5)/(1.1/sqrt(20))
+p.1 <- 2*pt(t.1, df = 19)
+```
+
+$\dfrac{\bar{X}-9.5}{s/\sqrt{n}} = \dfrac{9.2-9.5}{1.1/\sqrt{20}} \sim T_{19}$
+\
+p-value = 2 $\cdot$ P(T < `r round(t.1, digits = 3)`, df = 19) = `r round(p.1, digits = 3)`
+
+There is not enough evidence to rule out the claim that the mean of calcium level is 9.5 mg/dl.
+
+### Problem 3
+
+$$
+\textit{H}_{0}: {\mu}_{body \ temp} = 98.6
+$$
+$$
+\textit{H}_{\alpha}: {\mu}_{body \ temp} > 98.6
+$$
+Since we don't have population standard deviaton $\sigma$, we should use s to estimate standard error. 
+
+```{r, tidy=TRUE}
+temp <- c(98.0, 98.9, 99.0, 98.9, 98.8, 98.6, 99.1, 98.9, 98.5, 98.9, 98.9, 98.4, 99.0, 99.2, 98.6, 98.8, 98.9, 98.7)
+mean.2 <- mean(temp)
+s.2 <- sd(temp)
+t.2 <- (mean.2 - 98.6)/(s.2/sqrt(18))
+p.2 <- pt(t.2, df = 17, lower.tail = FALSE)
+```
+
+$\dfrac{\bar{X}-98.6}{s/\sqrt{n}} = \dfrac{98.78-98.6}{0.283/\sqrt{18}} \sim T_{17}$
+\
+p-value = P(T > `r round(t.2, digits = 3)`, df = 17) = `r round(p.2, digits = 3)`
+\
+There is an enough evidence to claim that the body temperature in average is higher than 98.6 degrees. 
+
+### Problem 6
+
+$$
+\textit{H}_{0}: {\lambda}_{birth} = 15
+$$
+$$
+\textit{H}_{\alpha}: {\lambda}_{birth} > 15
+$$
+
+X = # of births per months. If we assume null hypothesis is true, X ~ Pois(15).
+\
+p-value = $P(X\geq20) = \sum_{k=20}^{\infty} \dfrac{15^{{k}}e^{-15}}{k!}$ = `r round(ppois(19,15,lower.tail = FALSE), digits=3)`
+\
+There is not an enough evidence to rule out that the mean births per month is 15 (Not enough evidence to support the claim that the mean births per month is larger than 15).  
+
+### Problem 10
+
+**(a)**
+
+```{r, fig.align = 'center', results ='asis'}
+guatemala <- subset(Quetzal, select = Nest, subset = Country == "Guatemala", drop = T)
+costa.rica <- subset(Quetzal, select = Nest, subset = Country == "Costa Rica", drop = T)
+
+stargazer(data.frame(guatemala), title = "Summary Stats of Guatemala", header = FALSE)
+stargazer(data.frame(costa.rica), title = "Summary Stats of Costa Rica", header = FALSE)
+
+plot(Nest ~ Country, data = Quetzal, main = "Boxplots of Nest Heights, by Country", horizontal = TRUE, ylab = "Nest Height (m)")
+
+par(mfrow=c(1,2))
+hist(guatemala, main = "Guatemala", xlab = "Nest Height (m)")
+hist(costa.rica, main = "Costa Rica", xlab = "Nest Height (m)")
+par(mfrow=c(1,1))
+```
+
+The mean of nest height in Guatemala is higher than that of Costa Rica. The distribution of nest height in Guatemala is skewed to the right, whereas that of Costa Rica is slightly skewed to the left. 
+
+**(b)**
+
+$$
+\textit{H}_{0}: {\mu}_{nest \ height, \ Costa \ Rica} = {\mu}_{nest \ height, \ Guatemala}
+$$
+$$
+\textit{H}_{\alpha}: {\mu}_{nest \ height, \ Costa \ Rica} \neq {\mu}_{nest \ height, \ Guatemala}
+$$
+
+```{r}
+p.10 <- t.test(Nest ~ Country, data = Quetzal)$p.value
+```
+
+The p-value for the test is `r round(p.10, digits = 3)`, suggesting that there is an enough evidence to reject the claim that there is no difference between mean nest height in Costa Rica and Guatemala (p-value < 0.05). 
+
+**(c)**
+
+Potential outlier is one either above $Q_{0.75} + 1.5 \cdot IQR$ or below $Q_{0.25} - 1.5 \cdot IQR$.
+
+```{r, tidy=TRUE}
+outlier <- function(country){
+  iqr <- quantile(country, 0.75) - quantile(country, 0.25)
+  index <- which(country > quantile(country, 0.75)+1.5*iqr | country < quantile(country, 0.25)-1.5*iqr)
+  outlier <- country[index]
+  if (length(index) == 0) return(NA)
+  if (index != 0) return(outlier)
+}
+
+outlier.guatemala <- outlier(guatemala)
+outlier.costa.rica <- outlier(costa.rica)
+```
+
+Outlier (Guatemala): `r outlier.guatemala`
+\
+Outlier (Costa Rica): `r outlier.costa.rica`
+\
+Guatemala has an outlier of `r outlier.guatemala`
+
+```{r}
+Quetzal.2 <- subset(Quetzal, subset = Nest != outlier.guatemala)
+p.10.2 <- t.test(Nest ~ Country, data = Quetzal.2)$p.value
+```
+
+The p-value for the test is `r round(p.10.2, digits = 3)`, suggesting that there is not an enough evidence to reject the claim that there is no difference between mean nest height in Costa Rica and Guatemala (p-value > 0.05). So the conclusion changed by removing the outlier. 
+
+### Problem 11
+
+**(a)**
+
+```{r}
+salary.1985 <- subset(Salaries, select = Salary, subset = Year == 1985, drop = T)
+salary.2015 <- subset(Salaries, select = Salary, subset = Year == 2015, drop = T)
+```
+
+- $\mu_{1985}$: `r round(mean(salary.1985), digits = 3)` million dollars
+- $\mu_{2015}$: `r round(mean(salary.2015), digits = 3)` million dollars 
+- $s_{1985}$: `r round(sd(salary.1985), digits = 3)` million dollars
+- $s_{2015}$: `r round(sd(salary.2015), digits = 3)` million dollars
+
+```{r, fig.align='center'}
+par(mfrow=c(1,2))
+qqnorm(salary.1985, main = "1985")
+qqline(salary.1985)
+qqnorm(salary.2015, main = "2015")
+qqline(salary.2015)
+par(mfrow=c(1,1))
+```
+
+I can observe that the distributions are skewed to the right. 
+
+**(b)**
+
+$$
+\textit{H}_{0}: {\mu}_{salary, \ 1985} = {\mu}_{salary, \ 2015}
+$$
+$$
+\textit{H}_{\alpha}: {\mu}_{salary, \ 1985} \neq {\mu}_{salary, \ 2015}
+$$
+
+```{r}
+p.11 <- t.test(Salary ~ Year, data = Salaries)$p.value
+```
+
+The p-value of the t-test is `r round(p.11, digits = 3)`. At 5% of significance level, we can reject the null hypothesis. In other words, there is a signifant evidence to claim that the mean salary of major league baseball players in 1985 is different from that of 2015. 
+
+```{r, fig.align='center'}
+N <- 10^4
+salaries.pooled <- subset(Salaries, select = Salary, drop = T)
+salaries.result <- numeric(N)
+diff.mean.11 <- mean(salary.2015) - mean(salary.1985)
+
+for(i in 1:N){
+  index <- sample(length(salaries.pooled), size = length(salary.2015), replace = FALSE)
+  salaries.result[i] <- mean(salaries.pooled[index])- mean(salaries.pooled[-index]) 
+}
+
+hist(salaries.result, xlab = "xbar(2015)-xbar(1985)", 
+     main = "Permutation distribution for difference in means")
+abline(v = diff.mean.11, col = "red", lty=5)
+p.11.perm <- (sum(salaries.result >= diff.mean.11)+1)/(N+1)*2
+```
+
+The p-value of the t-test is `r round(p.11.perm, digits = 3)`. At 5% of significance level, we cannot reject the null hypothesis. In other words, there is not a signifant evidence to claim that the mean salary of major league baseball players in 1985 is different from that of 2015.
+
+**(d)**
+
+I will report the p-value of permuation test. The distributions of salaries are heavily skewed to the right, so expecting that that population is normal is a risky assumption to make.
+
+### Problem 17
+
+**(a)**
+
+$$
+\textit{H}_{0}: {P}_{infection, \ 30\%} = {P}_{infection, \ 80\%}
+$$
+$$
+\textit{H}_{\alpha}: {P}_{infection, \ 30\%} \neq {P}_{infection, \ 80\%}
+$$
+```{r}
+p.17 <- prop.test(c(28,13), c(250,250))$p.value
+```
+
+The p-value of the test is `r round(p.17, digits = 3)`, suggesting that there exists a difference in mean proportion of infection between those received 80% inspired and 30% inspired oxygen.
+
+**(b)**
+
+```{r}
+ci.17 <- prop.test(c(28,13), c(250,250))$conf
+```
+
+95% CI: (`r round(ci.17[1], digits = 4)`, `r round(ci.17[2], digits = 4)`)
+\
+We are 95% confident that in average the percentages of infection for patients who received 30% inspired oxygen is from  `r round(100*ci.17[1], digits = 4)`% to `r round(100*ci.17[2], digits = 4)`% higher than that of patients who received 80% inspired oxygen. 
+
+**(c)**
+
+We are not sure about how 30% inspired oxygen is better/worse than no oxygen.
+
+### Problem 18
+
+**(a)**
+
+$$
+\textit{H}_{0}: {P}_{lice, \ permethrin-treated} = {P}_{lice, \ untreated}
+$$
+$$
+\textit{H}_{\alpha}: {P}_{lice, \ permethrin-treated} \neq {P}_{lice, \ untreated}
+$$
+
+```{r}
+p.18 <- prop.test(c(11,3), c(32,28))$p.value
+```
+
+The p-value for hypothesis test is `r round(p.18, digits = 3)`, suggesting that there is no significant evidence to claim that there exists difference in mean proportion of lice infestations between the groups who wore permethrin-treated underwear from those who wore untreated underwear. 
+
+**(b)**
+
+```{r}
+ci.18 <- prop.test(c(11,3), c(32,28))$conf
+```
+
+95% CI: (`r round(ci.18[1], digits = 4)`, `r round(ci.18[2], digits = 4)`)
+\
+We are 95% confident that in average the percentages of lice infestations for homeless people who wore 30% untreated underwear is from  `r round(100*ci.18[1], digits = 4)`% to `r round(100*ci.18[2], digits = 4)`% higher than that of homeless people who wore  permethrin-treated underwear. 
+
+**(c)** 
+
+Lack of the samples from the both groups can be attributed to the samples' incomprehensive representation of the population. Such underepresentation potentially bias the outcome. 
+
+### Problem 19
+
+**(a)**
+
+$$
+\textit{H}_{0}: {P}_{cpc \ = \ 0, \ mobile} = {P}_{cpc \ = \ 0, \ desktop}
+$$
+$$
+\textit{H}_{\alpha}: {P}_{cpc \ = \ 0, \ mobile} \neq {P}_{cpc \ = \ 0, \ desktop}
+$$
+
+```{r}
+mobile.cpc <- unlist(MobileAds$m.cpc_post)
+desktop.cpc <- unlist(MobileAds$d.cpc_post)
+mobile.0 <- sum(mobile.cpc==0)
+desktop.0 <- sum(desktop.cpc==0)
+```
+
+- P(cpc = 0, mobile platform): `r round(mobile.0/length(mobile.cpc), digits = 3)`
+- P(cpc = 0, desktop platform): `r round(desktop.0/length(desktop.cpc), digits = 3)`
+
+**(b)**
+
+```{r}
+table.19 <- matrix(nrow = 2, ncol = 2, dimnames = list(c("0", "Not 0"),
+                               c("0", "Not 0")))
+table.19[1,1] = sum(MobileAds$m.cpc_post == 0 & MobileAds$d.cpc_post == 0)
+table.19[2,1] = sum(MobileAds$m.cpc_post != 0 & MobileAds$d.cpc_post == 0)
+table.19[1,2] = sum(MobileAds$m.cpc_post == 0 & MobileAds$d.cpc_post != 0)
+table.19[2,2] = sum(MobileAds$m.cpc_post != 0 & MobileAds$d.cpc_post != 0)
+
+kable(table.19, "latex",  booktabs = T) %>% 
+  kable_styling(position = "center") %>%
+  add_header_above(c(" ", "Desktop" = 2)) %>%
+  group_rows("Mobile", 1, 2)
+
+p.19 <- 2*pbinom(18,55,0.5)
+```
+
+The p-value for hypothesis test is `r round(p.19, digits = 3)`, suggesting that we can rule out the possibility that there exists no difference in mean proption of cpc = 0 between mobile and desktop platforms. 
+
+### Problem 22
+
+Type I error: claiming that the mean cholesterol level is higher than 0 if its true mean is 0. In practical term, type I error leads the company to make a fake drug that might not effectively lower the cholesterol level.
+\
+Type II error: claming that the mean cholesterol level is 0 even if its true mean is higher than 0. This means that the company will waste the budget it invested on developing such drug. Also, the patients won't have a chance to be treated with an effective medications.
+
+
+### Problem 23
+
+**(a)**
+
+Type I error: claiming that arsenic level in my community is higher than the EPA standard of 10 ppb even if the true arsenic level in my community is 10 ppb. This leads regional government to "overtreat" arsenic level issue and waste government budget lowering arsenic level that is not actually higher than the standard.
+\
+Type II error: claming that the arsenic level is my community is not higher than the EPA standard of 10 ppb even if it is higher than 10 ppb. This leads ineffective treatment on high arsenic level in water, which leads to water borne diseases and other public health related problems. 
+
+**(b)**
+
+t-distribution reflects uncertainties arose from lack of information on the population distribution by incorporating degrees of freedom, number of values in the final calculation of a statistic that are free to vary. Degrees of freedom in this case is 15-1 = 14, and the t-distribution with df = 14 has fatter tails than the standard normal distribution. Therefore, it is possible that he cannot reject the null hypothesis if he uses t instead of the standard normal distribution. 
+
+### Problem 29
+
+Let X = # of successes,
+\
+0.025 = $P(X \geq C_1 \ | \ Bin(50,0.6)) = \sum_{k=C_1}^{50}{50 \choose k}(0.6)^{k}(0.4)^{50-k}$
+\
+$P(X \geq 37 \ | \ Bin(50,0.6))$ = `r round(1-pbinom(36, 50, 0.6), digits = 3)`
+\
+$P(X \geq 38 \ | \ Bin(50,0.6))$ = `r round(1-pbinom(37, 50, 0.6), digits = 3)`
+\
+$\therefore C_1$ = 38.
+\
+0.025 = $P(X \leq C_2 \ | \ Bin(50,0.6)) = \sum_{k=0}^{C_2}{50 \choose k}(0.6)^{k}(0.4)^{50-k}$
+\
+$P(X \leq 22 \ | \ Bin(50,0.6))$ = `r round(pbinom(22, 50, 0.6), digits = 3)`
+\
+$P(X \leq 23 \ | \ Bin(50,0.6))$ = `r round(pbinom(23, 50, 0.6), digits = 3)`
+\
+$\therefore C_2$ = 22.
+\
+R = {1,2,...,22} U {38,39,...,50}
+
+### Problem 30
+
+**(a)**
+
+If null is true, $\sum_{i=1}^{5}X_i$ ~ Pois(10).
+\
+$P(Type \  I \ Error) = P(Reject\ H_0 \ | \ H_0 \ is \ true) = P(\sum_{i=1}^{5}X_i \geq 16 \ | \ \lambda = 2) = \sum_{k=16}^{\infty} \dfrac{10^{{k}}e^{-10}}{k!}$ = `r round(ppois(15,10,lower.tail = FALSE), digits=3)`
+
+**(b)**
+
+If the true $\lambda$ is 4, $\sum_{i=1}^{5}X_i$ ~ Pois(20).
+\
+$P(Type \  II \ Error) = P(Not \ Reject\ H_0 \ | \ H_\alpha \ is \ true) = P(\sum_{i=1}^{5}X_i < 16 \ | \ \lambda = 4) = \sum_{k=0}^{15} \dfrac{20^{{k}}e^{-20}}{k!}$ = `r round(ppois(15,20), digits=3)`
+
+### Problem 31
+
+**(a)**
+
+If null is true, x ~ Exp(1).
+\
+$P(Type \  I \ Error) = P(Reject\ H_0 \ | \ H_0 \ is \ true) = P(x \geq 3.2 \ | \ \lambda = 1) = \int_{3.2}^{\infty}e^{-x}dx$ = `r round(1-pexp(3.2,1), digits = 3)`
+
+**(b)**
+
+If the true $\lambda$ is 1/5, x ~ Exp(1/5)
+\
+$P(Type \  II \ Error) = P(Not \ Reject\ H_0 \ | \ H_\alpha \ is \ true) = P(x < 3.2 \ | \ \lambda = 1/5) = \int_{0}^{3.2}\dfrac{1}{5}e^{-x/5}dx$ =  `r round(pexp(3.2,1/5), digits = 3)`
+
+### Problem 34
+
+The pdf of unif[0,$\theta$] = 1/$\theta$ if $0\leq x \leq \theta$.
+\
+The cdf F(x) = $P(x\leq t) = \int_{0}^{t}\dfrac{1}{\theta}dx = \dfrac{t}{\theta}$
+\
+$f_{X_{max}}(t) = nF(t)^{n-1}f(t) = 5(\dfrac{t}{\theta})^4\dfrac{1}{\theta} = \dfrac{5t^4}{\theta^5}$ 
+\
+If null is true, $f_{X_{max}}(t) = \dfrac{5t^4}{2^5}$
+\
+$P(Type \  I \ Error) = P(Reject\ H_0 \ | \ H_0 \ is \ true) = P(X_{max} \geq k \ | \ \theta = 2) = \int_{k}^{2} \dfrac{5t^4}{2^5} dt$ = 0.05
+\
+0.05 = $\dfrac{t^5}{2^5}|_{k}^{2} = 1-\dfrac{k^5}{2^5}$
+\
+k = $(0.95 \cdot 2^5)^{1/5} \approx$ `r round((0.95*2^5)^(1/5), digits = 3)`.
+
+\newpage
+
+### Plus A
+
+```{r}
+gummy <- read.csv("http://math.carleton.edu/Chihara/Stats275/Gummy.csv")
+p.old <- mean(gummy$Twin1 == "Yes")
+p.young <- mean(gummy$Twin2 == "Yes")
+```
+
+Proportion of old twins addicted to gummy bear: `r round(p.old, digits = 3)`
+\
+Proportion of young twins addicted to gummy bear: `r round(p.young, digits = 3)`
+
+$$
+\textit{H}_{0}: {P}_{addicted, \ young} = {P}_{addicted, \ old}
+$$
+$$
+\textit{H}_{\alpha}: {P}_{addicted, \ young} \neq {P}_{addicted, \ old}
+$$
+Our interest is either older or younger twin is addicted to the gummy bears, so we should disregard observation of both addcited or not addicted to the gummy bears. 
+
+```{r}
+table.A <- matrix(nrow = 2, ncol = 2, dimnames = list(c("Yes", "No"),
+                               c("Yes", "No")))
+table.A[1,1] = sum(gummy$Twin1 == "Yes" & gummy$Twin2 == "Yes")
+table.A[2,2] = sum(gummy$Twin1 == "No" & gummy$Twin2 == "No")
+table.A[1,2] = sum(gummy$Twin1 == "Yes" & gummy$Twin2 == "No")
+table.A[2,1] = sum(gummy$Twin1 == "No" & gummy$Twin2 == "Yes")
+
+kable(table.A, "latex",  booktabs = T) %>% 
+  kable_styling(position = "float_left") %>%
+  add_header_above(c(" ", "Twin II" = 2)) %>%
+  group_rows("Twin I", 1, 2)
+
+p.A <- 2*pbinom(25,71,0.5)
+```
+
+The p-value of the hypothesis test is `r round(p.A, digits = 3)`, suggesting that there is a significant evidence to rule out the claim that proportions of older twins and younger twins addicted to gummy bears are the same. 
